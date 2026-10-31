@@ -1,5 +1,5 @@
 /* InukSaiyan Game Picker v0.3 — cache-only offline support for this app's files. */
-const CACHE = "inuksaiyan-game-picker-v03-20261031";
+const CACHE = "inuksaiyan-game-picker-v03-aspect-20261031";
 const PRECACHE = ["./", "./index.html", "./manifest.webmanifest"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(PRECACHE)).then(() => self.skipWaiting()));
