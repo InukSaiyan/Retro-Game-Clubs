@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101b27">
+<link rel="manifest" href="./manifest.webmanifest">
 <title>InukSaiyan Retro Game Club — Game Picker</title>
 <style>
   :root { color-scheme: dark; }
@@ -22,6 +23,30 @@
   .version { color: #9dabb9; font-size: .8rem; }
   label { display: block; margin-bottom: 7px; color: #d9e6ec; font-weight: 650; }
   .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .mode-row { margin-top: 12px; }
+  input[type="search"] { font: inherit; width: 100%; min-height: 46px; border: 1px solid #4e6276; border-radius: 10px; padding: 9px 12px; background: #223246; color: #fff; }
+  input[type="search"]:focus-visible, summary:focus-visible, .file-label:focus-visible { outline: 3px solid #f0bd81; outline-offset: 2px; }
+  details { margin: 8px 0 16px; }
+  summary { color: #8ed9ef; cursor: pointer; padding: 6px 0; font-weight: 750; }
+  h3 { font-size: .9rem; margin: 14px 0 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  button.chip { min-height: 34px; width: auto; padding: 4px 11px; font-size: .78rem; color: #dbe6ed; border: 1px solid #597186; background: #223448; border-radius: 999px; }
+  button.chip[aria-pressed="true"] { color: #0d2530; border-color: #8ed9ef; background: #8ed9ef; }
+  .row-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .row-head h2 { margin: 0; }
+  .file-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+  .file-label { display: inline-block; cursor: pointer; padding: 10px 12px; border-radius: 11px; border: 1px solid #63788d; background: #24364a; font-size: .85rem; font-weight: 750; }
+  .file-actions input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
+  .small { width: auto; min-height: 35px; padding: 5px 11px; font-size: .8rem; }
+  .list-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .list-actions button { width: auto; min-height: 34px; font-size: .73rem; padding: 5px 8px; }
+  .list-row { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+  .list-row span { min-width: 0; overflow-wrap: anywhere; }
+  .note { font-size: .79rem; color: #aebdcb; }
+  .preview-note { border: 1px dashed #506e82; padding: 10px; border-radius: 10px; margin-top: 10px; }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (max-width: 370px) { .list-row { align-items: flex-start; } .list-actions { flex-direction: column; } }
   select, button {
     font: inherit; border-radius: 12px;
     min-height: 50px; width: 100%;
@@ -82,8 +107,27 @@
     <div class="eyebrow">🎮 INUKSAIYAN</div>
     <h1>Retro Game Club</h1>
     <p>Can't decide what to play?</p>
-    <div class="version">Game Picker · v0.2</div>
+    <div class="version">Game Picker · v0.3 PREVIEW</div>
+    <p class="preview-note note">Testing new features here won't change the live v0.2 homepage.</p>
   </header>
+
+  <section class="panel" aria-labelledby="personalize-title">
+    <div class="row-head">
+      <h2 id="personalize-title">✨ Make it yours</h2>
+      <span class="version">Optional</span>
+    </div>
+    <p>Pick the consoles and genres you enjoy. Everything stays on this device.</p>
+    <details id="preferences">
+      <summary>Choose my interests</summary>
+      <h3>Consoles you love</h3>
+      <div id="console-chips" class="chips" role="group" aria-label="Preferred consoles"></div>
+      <h3>Favorite genres</h3>
+      <div id="genre-chips" class="chips" role="group" aria-label="Preferred genres"></div>
+    </details>
+    <label for="game-search">Find a game you're interested in or already have</label>
+    <input id="game-search" type="search" autocomplete="off" placeholder="Try Zelda, Mario, Dr. Mario..." />
+    <ul id="search-list"><li class="empty">Search our game catalog to add games.</li></ul>
+  </section>
 
   <section aria-label="Game filters">
     <div class="filters">
@@ -95,6 +139,14 @@
         <label for="genre">Genre</label>
         <select id="genre"><option value="All">All genres</option></select>
       </div>
+    </div>
+    <div class="mode-row">
+      <label for="source">Pick from</label>
+      <select id="source">
+        <option value="All">🎲 All games</option>
+        <option value="ForMe">💙 My interests</option>
+        <option value="Library">📁 My library only</option>
+      </select>
     </div>
     <p id="count" class="hint"></p>
     <button id="pick" class="primary" type="button">🎲 Pick My Game!</button>
@@ -113,14 +165,35 @@
     <ul id="saved-list"></ul>
   </section>
 
+  <section class="panel" aria-labelledby="wishlist-title">
+    <h2 id="wishlist-title">♡ Want to play <span id="wishlist-count" class="version"></span></h2>
+    <p>Games you're interested in, whether or not you own them.</p>
+    <ul id="wishlist-list"></ul>
+  </section>
+
+  <section class="panel" aria-labelledby="library-title">
+    <h2 id="library-title">📁 My Game Library <span id="library-count" class="version"></span></h2>
+    <p>Select game filenames to match against our catalog. Files stay on your device; we only remember matched game names. You can also mark games manually using search.</p>
+    <div class="file-actions">
+      <label class="file-label" for="file-import">Select game files</label>
+      <input type="file" id="file-import" multiple aria-label="Select game filenames" />
+      <label class="file-label" for="folder-import">Select folder</label>
+      <input type="file" id="folder-import" multiple webkitdirectory directory aria-label="Select a folder of game filenames" />
+    </div>
+    <p class="note">Folder selection depends on your browser. ROMs are not opened, uploaded, copied or launched.</p>
+    <p id="import-status" class="note" aria-live="polite">No filenames imported yet.</p>
+    <ul id="library-list"></ul>
+    <button type="button" id="clear-library" class="secondary small">Clear my library list</button>
+  </section>
+
   <section class="panel" aria-labelledby="recent-title">
     <h2 id="recent-title">Recent picks</h2>
     <ul id="recent-list"><li class="empty">No picks yet. Give it a spin!</li></ul>
   </section>
 
   <footer>
-    Made by InukSaiyan · v0.2<br>
-    Game recommendations only — no ROMs, downloads, or emulator launching.
+    Made by InukSaiyan · v0.3 preview<br>
+    Recommendations and local catalog matching only — no ROM downloads, file uploads, or emulator launching.
   </footer>
 </main>
 
@@ -233,6 +306,27 @@ const $ = id => document.getElementById(id);
 const systemSelect = $("system");
 const genreSelect = $("genre");
 const saveButton = $("save");
+const sourceSelect = $("source");
+const STORAGE = {
+  wish: "inuksaiyan-wishlist-v03",
+  library: "inuksaiyan-library-v03",
+  consoles: "inuksaiyan-consoles-v03",
+  genres: "inuksaiyan-genres-v03"
+};
+function loadArray(key, allowed) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(value) ? [...new Set(value.filter(v => typeof v === "string" && allowed.includes(v)))].slice(0, 250) : [];
+  } catch (_) { return []; }
+}
+function storeArray(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); }
+  catch (_) { /* Memory-only fallback when browser storage is disabled. */ }
+}
+let wished = loadArray(STORAGE.wish, games.map(g => g.id));
+let library = loadArray(STORAGE.library, games.map(g => g.id));
+let likedConsoles = loadArray(STORAGE.consoles, Object.keys(catalog));
+let likedGenres = loadArray(STORAGE.genres, [...new Set(games.map(g => g.genre))]);
 let current = null;
 let previous = null;
 let recent = [];
@@ -253,14 +347,23 @@ Object.keys(catalog).forEach(s => addOption(systemSelect, s));
 [...new Set(games.map(g => g.genre))].sort().forEach(g => addOption(genreSelect, g));
 
 function filteredGames() {
+  const mode = sourceSelect.value;
+  const anyInterest = wished.length || likedConsoles.length || likedGenres.length;
   return games.filter(g =>
     (systemSelect.value === "All" || g.system === systemSelect.value) &&
-    (genreSelect.value === "All" || g.genre === genreSelect.value)
+    (genreSelect.value === "All" || g.genre === genreSelect.value) &&
+    (mode === "All" ||
+      (mode === "Library" && library.includes(g.id)) ||
+      (mode === "ForMe" && (!anyInterest || wished.includes(g.id) ||
+        likedConsoles.includes(g.system) || likedGenres.includes(g.genre))))
   );
 }
 function updateCount() {
   const count = filteredGames().length;
-  $("count").textContent = count + " " + (count === 1 ? "game" : "games") + " in this selection";
+  let context = "";
+  if (sourceSelect.value === "Library" && !library.length) context = " · Add games to your library first";
+  if (sourceSelect.value === "ForMe" && !(wished.length || likedConsoles.length || likedGenres.length)) context = " · Choose interests for more personal picks";
+  $("count").textContent = count + " " + (count === 1 ? "game" : "games") + " in this selection" + context;
   $("pick").disabled = count === 0;
   $("pick").textContent = count ? "🎲 Pick My Game!" : "No matching games";
 }
@@ -332,7 +435,7 @@ function pickGame() {
   if (pool.length > 1) pool = pool.filter(g => g.id !== previous);
   current = pool[Math.floor(Math.random() * pool.length)];
   previous = current.id;
-  $("tag").textContent = "YOUR PICK";
+  $("tag").textContent = sourceSelect.value === "Library" ? "FROM YOUR LIBRARY" : sourceSelect.value === "ForMe" ? "PICKED FOR YOU" : "YOUR PICK";
   $("game").textContent = current.title;
   $("details").textContent = current.system + " · " + current.genre;
   recent = [current, ...recent.filter(g => g.id !== current.id)].slice(0, 5);
@@ -342,6 +445,7 @@ function pickGame() {
 $("pick").addEventListener("click", pickGame);
 systemSelect.addEventListener("change", updateCount);
 genreSelect.addEventListener("change", updateCount);
+sourceSelect.addEventListener("change", updateCount);
 saveButton.addEventListener("click", () => {
   if (!current) return;
   saved = saved.includes(current.id)
@@ -351,6 +455,183 @@ saveButton.addEventListener("click", () => {
   showSaved();
   showSaveButton();
 });
+
+// v0.3: No server accounts or file contents. Game IDs and preferences are kept locally.
+function updateCollection(which, id) {
+  const key = which === "wish" ? STORAGE.wish : STORAGE.library;
+  const arr = which === "wish" ? wished : library;
+  const next = arr.includes(id) ? arr.filter(x => x !== id) : [...arr, id];
+  if (which === "wish") wished = next; else library = next;
+  storeArray(key, next);
+  renderCollections();
+  renderSearch();
+  updateCount();
+}
+function gameRow(g, context) {
+  const li = document.createElement("li");
+  li.className = "list-row";
+  const desc = document.createElement("span");
+  const title = document.createElement("strong");
+  title.textContent = g.title;
+  const meta = document.createElement("span");
+  meta.className = "meta";
+  meta.textContent = g.system + " · " + g.genre;
+  desc.append(title, meta);
+  const actions = document.createElement("div");
+  actions.className = "list-actions";
+  const kinds = context === "search" ? ["wish", "library"] : [context];
+  for (const kind of kinds) {
+    const active = (kind === "wish" ? wished : library).includes(g.id);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "secondary";
+    btn.textContent = context === "search"
+      ? (kind === "wish" ? (active ? "♥ Interested" : "♡ Want to play") : (active ? "✓ In library" : "+ I have it"))
+      : "Remove";
+    btn.setAttribute("aria-label", (active ? "Remove " : "Add ") + g.title + (kind === "wish" ? " from want to play" : " from my library"));
+    btn.addEventListener("click", () => updateCollection(kind, g.id));
+    actions.appendChild(btn);
+  }
+  li.append(desc, actions);
+  return li;
+}
+function renderCollections() {
+  for (const [id, ids, label, kind] of [
+    ["wishlist-list", wished, "wishlist-count", "wish"],
+    ["library-list", library, "library-count", "library"]
+  ]) {
+    const el = $(id);
+    el.replaceChildren();
+    $(label).textContent = "(" + ids.length + ")";
+    if (!ids.length) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = kind === "wish" ? "No games on your wish list yet." : "No games added yet. This doesn't scan your device automatically.";
+      el.appendChild(li);
+    } else {
+      ids.forEach(key => {
+        const found = games.find(g => g.id === key);
+        if (found) el.appendChild(gameRow(found, kind));
+      });
+    }
+  }
+  $("clear-library").disabled = !library.length;
+}
+function renderSearch() {
+  const search = $("game-search").value.trim().toLowerCase();
+  const el = $("search-list");
+  el.replaceChildren();
+  const matches = search.length > 1
+    ? games.filter(g => (g.title + " " + g.system).toLowerCase().includes(search)).slice(0, 12)
+    : [];
+  if (!matches.length) {
+    const li = document.createElement("li");
+    li.className = "empty";
+    li.textContent = search.length < 2 ? "Type at least 2 characters to find a game." : "No catalog matches. More games will be added in later versions.";
+    el.appendChild(li);
+  } else {
+    matches.forEach(g => el.appendChild(gameRow(g, "search")));
+  }
+}
+function makeChips(container, options, kind) {
+  const el = $(container);
+  const picked = kind === "consoles" ? likedConsoles : likedGenres;
+  el.replaceChildren();
+  options.forEach(value => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "chip";
+    btn.textContent = value;
+    btn.setAttribute("aria-pressed", String(picked.includes(value)));
+    btn.addEventListener("click", () => {
+      const next = picked.includes(value) ? picked.filter(x => x !== value) : [...picked, value];
+      if (kind === "consoles") likedConsoles = next; else likedGenres = next;
+      storeArray(STORAGE[kind], next);
+      makeChips(container, options, kind);
+      updateCount();
+    });
+    el.appendChild(btn);
+  });
+}
+const genres = [...new Set(games.map(g => g.genre))].sort();
+makeChips("console-chips", Object.keys(catalog), "consoles");
+makeChips("genre-chips", genres, "genres");
+$("preferences").open = !(wished.length || likedConsoles.length || likedGenres.length);
+$("game-search").addEventListener("input", renderSearch);
+$("clear-library").addEventListener("click", () => {
+  if (!library.length || !confirm("Clear your local library list? This will not delete or change any game files.")) return;
+  library = [];
+  storeArray(STORAGE.library, library);
+  renderCollections();
+  renderSearch();
+  updateCount();
+  $("import-status").textContent = "Your library list was cleared. No game files were changed.";
+});
+// Filename-only matching. Nothing is read from game files, uploaded or opened.
+const extensionSystems = {
+  nes:["NES"],sfc:["SNES"],smc:["SNES"],gb:["Game Boy"],gbc:["Game Boy Color"],
+  gba:["Game Boy Advance"],md:["Sega Genesis"],gen:["Sega Genesis"],smd:["Sega Genesis"],
+  n64:["Nintendo 64"],z64:["Nintendo 64"],v64:["Nintendo 64"],
+  nds:["Nintendo DS"],nkit:["GameCube","Wii"],rvz:["GameCube","Wii"],
+  wbfs:["Wii"],gcm:["GameCube"],cso:["PSP"],pbp:["PSP"],chd:["PlayStation 1","Dreamcast","Sega Saturn","PlayStation 2"],
+  iso:["PlayStation 1","PlayStation 2","GameCube","Wii","PSP","Dreamcast","Sega Saturn"],
+  bin:["PlayStation 1","Sega Genesis","Dreamcast","Sega Saturn"],cdi:["Dreamcast"],
+  cue:["PlayStation 1","Dreamcast","Sega Saturn"],zip:[],7z:[]
+};
+function normalizeTitle(str) {
+  return str.normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim();
+}
+function matchFilename(name) {
+  const dot = name.lastIndexOf(".");
+  if (dot <= 0) return {status:"unknown"};
+  const ext = name.slice(dot + 1).toLowerCase();
+  if (!(ext in extensionSystems)) return {status:"unknown"};
+  const stem = name.slice(0, dot);
+  // Remove region/revision/translation tags, not years in actual game titles.
+  const clean = stem.replace(/\[[^\]]*\]/g, "")
+    .replace(/\((?:USA|Europe|Japan|World|En|Fr|Rev\b|Version|Disc\b|Disk\b|v\d)[^)]*\)/gi, "").trim();
+  const key = normalizeTitle(clean);
+  const allowed = extensionSystems[ext];
+  const matches = games.filter(g => (!allowed.length || allowed.includes(g.system)) && normalizeTitle(g.title) === key);
+  return matches.length === 1 ? {status:"matched",id:matches[0].id}
+    : {status: matches.length > 1 ? "ambiguous" : "unknown"};
+}
+function importFiles(fileList) {
+  const selected = Array.from(fileList || []);
+  if (!selected.length) return;
+  let matched = 0, unmatched = 0, ambiguous = 0;
+  let unique = 0;
+  for (const file of selected) {
+    // file.name only; never call file.arrayBuffer(), FileReader or file upload.
+    const result = matchFilename(file.name);
+    if (result.status === "matched") {
+      matched++;
+      if (!library.includes(result.id)) { library.push(result.id); unique++; }
+    } else if (result.status === "ambiguous") ambiguous++;
+    else unmatched++;
+  }
+  library = library.slice(0, games.length);
+  storeArray(STORAGE.library, library);
+  $("import-status").textContent = selected.length + " filenames checked: " +
+    matched + " exact matches (" + unique + " new), " + unmatched + " unmatched, " +
+    ambiguous + " ambiguous. Unmatched games can be added manually above.";
+  renderCollections();
+  renderSearch();
+  updateCount();
+}
+for (const id of ["file-import", "folder-import"]) {
+  $(id).addEventListener("change", event => {
+    importFiles(event.target.files);
+    event.target.value = "";
+  });
+}
+renderSearch();
+renderCollections();
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+}
+
 updateCount();
 showSaved();
 showRecent();
