@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10212d"><title>InukSaiyan Community Widget v0.4 Preview</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1b27;--panel:#172f3e;--edge:#456473;--ice:#9be3ea;--cream:#faf2dd;--muted:#b9cbd3}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--cream);font:15px/1.42 system-ui,sans-serif}
+body{background:radial-gradient(circle at right top,#255266 0%,transparent 40%),var(--bg)}
+main{max-width:800px;margin:auto;padding:12px}header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.logo{font-weight:900;font-size:clamp(15px,3.2vw,22px);letter-spacing:.04em}.logo small{display:block;color:var(--ice);font-size:10px;letter-spacing:.12em}
+.flag{font-size:10px;border:1px solid #ba8860;color:#f1ad7c;border-radius:99px;padding:4px 7px;white-space:nowrap}
+.hero{padding:15px;background:linear-gradient(120deg,#285363,#172d3c);border:1px solid #578091;border-radius:15px;margin:12px 0}
+.hero h1{font-size:clamp(20px,4vw,29px);line-height:1.15;margin:4px 0}.hero p{margin:4px 0}
+.muted{color:var(--muted);font-size:12px}.eyebrow{color:var(--ice);font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;position:sticky;top:0;background:#0b1b27fa;padding:7px 0;z-index:2}
+button,a{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid #f1ad7c;outline-offset:2px}
+.btn{color:var(--cream);background:#224554;border:1px solid #56818f;border-radius:9px;padding:8px 11px;font-weight:750;font-size:12px;text-decoration:none;display:inline-block}
+.btn.active,.primary{background:var(--ice);border-color:var(--ice);color:#092733}
+.tab{padding:11px 4px}.view{display:none}.view.active{display:block}
+.filters,.actions{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 12px}
+.headline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.card{border:1px solid var(--edge);background:var(--panel);border-radius:13px;padding:13px;margin:0 0 9px}
+.card h2{font-size:17px;line-height:1.2;margin:5px 0}.source{color:var(--ice);font-size:12px;font-weight:800}
+.desc{font-size:12px;color:var(--muted);margin:5px 0}.badge{display:inline-block;border:1px solid #7e7354;border-radius:99px;padding:2px 8px;color:#eed1a1;font-size:11px}
+.follow{width:20px;height:20px;accent-color:var(--ice)}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.empty{border:1px dashed var(--edge);padding:18px;text-align:center;border-radius:12px;color:var(--muted);font-size:13px}
+.notes{display:none;margin-top:10px}.notes.open{display:block}
+textarea{width:100%;min-height:75px;resize:vertical;background:#0a2431;color:var(--cream);border:1px solid #74939f;padding:9px;border-radius:9px;font:inherit;font-size:13px}
+footer{margin:14px 0 2px;border-top:1px solid var(--edge);padding-top:12px;color:var(--muted);font-size:11px}a{color:var(--ice)}
+@media(max-width:400px){main{padding:8px}.card{padding:10px}.logo{font-size:15px}.btn{padding:7px 8px;font-size:11px}}
+</style></head><body><main>
+<header><div class="logo">🏔️ INUKSAIYAN<small>RETRO GAME CLUB · COMMUNITY</small></div><span class="flag">WIDGET v0.4 PREVIEW</span></header>
+<div class="hero"><div class="eyebrow">What are the clubs playing?</div><h1>One widget. Many game clubs.</h1>
+<p class="muted">Follow clubs, discover game picks, track your play-alongs and open their discussions.</p>
+<p class="muted">Public snapshot verified October 31, 2026 · not a live Discord connection</p></div>
+<nav class="tabs" aria-label="Widget navigation">
+<button type="button" class="btn tab active" data-tab="picks">🎲 Picks</button><button type="button" class="btn tab" data-tab="clubs">🌐 Clubs</button><button type="button" class="btn tab" data-tab="plays">🎮 My Plays</button></nav>
+<section id="view-picks" class="view active">
+<div class="filters"><button type="button" class="btn active" data-filter="all">Public picks</button><button type="button" class="btn" data-filter="followed">My clubs</button><button type="button" class="btn" data-filter="monthly">Game of Month</button></div>
+<div class="headline"><span class="muted" id="pick-count"></span><button type="button" class="btn primary" id="random">🎲 Surprise me</button></div>
+<div id="suggestion" aria-live="polite"></div><div id="picks"></div></section>
+<section id="view-clubs" class="view"><h2>🌐 Follow communities</h2><p class="muted">Your follows stay on this device. Private member discussions still require joining the club.</p><div id="clubs"></div>
+<div class="muted">These clubs are independent. Listings and source links do not imply partnerships, Discord API access, or permission to reproduce private reviews.</div></section>
+<section id="view-plays" class="view"><h2>🎮 My play-alongs</h2><p id="progress-count" class="muted"></p><div id="plays"></div>
+<div class="muted">Progress and review notes stay in this widget's local storage. They are not posted to Discord or synchronized across devices.</div></section>
+<footer>Made by InukSaiyan · Vibe-coded with ChatGPT 😅 · Experimental widget for iiSU's Web Widget feature. No emulator launching or ROM downloads. <a href="../../">Game Picker v0.3 ↗</a></footer>
+</main><script>
+"use strict";
+const feed={"schema_version":1,"verified_on":"2026-10-31","description":"Community club directory: selected public Oct 2026 event picks are hand-verified snapshots. No Discord message reading, live syncing, private Patreon access, or official partnerships.","clubs":[{"id":"joeys-prgc","name":"Joey's Play Retro Games Club","home_url":"https://www.joeysretrohandhelds.com/play-retro-games-club/","description":"Discord-based play-along with member discussions, nominations and votes, weekly/monthly/seasonal picks and romhack events.","picks":[{"title":"Super Mario Sunshine","system":"GameCube","event":"Game of the Month","month":"2026-10","source_url":"https://forum.joeysretrohandhelds.com/d/58-super-mario-sunshine-gc-october-2026"},{"title":"Super Ghouls 'n Ghosts","system":"SNES","event":"Halloween Special","month":"2026-10","source_url":"https://forum.joeysretrohandhelds.com/"},{"title":"Galaga","system":"NES","event":"Game of the Week","month":"2026-10","period":"Oct 25–31, 2026","source_url":"https://www.joeysretrohandhelds.com/play-retro-games-club/"},{"title":"Kirby's Halloween Adventure","system":"NES romhack","event":"Romhack of the Month","month":"2026-10","source_url":"https://www.joeysretrohandhelds.com/play-retro-games-club/"},{"title":"Paper Mario","system":"Nintendo 64","event":"Game of the Season","month":"2026-10","period":"Q4 2026","source_url":"https://www.joeysretrohandhelds.com/play-retro-games-club/"}],"access":"Public club announcements; Discord account needed to participate","discord_url":"https://discord.com/servers/1237837907679772672","discussion_url":"https://forum.joeysretrohandhelds.com/","integration":"public-announcement-snapshot"},{"id":"rh-gotx","name":"Retro Handhelds GotX","home_url":"https://retrohandhelds.gg/community/","description":"Retro Handhelds Discord GotX: voted monthly games from different eras, dedicated discussion threads and completion challenges.","picks":[{"title":"Castlevania","system":"NES","event":"Game of the Month · Pre-1996","month":"2026-10","source_url":"https://retrohandhelds.gg/game-of-the-month-october-2026/"},{"title":"The Legend of Zelda: Majora's Mask","system":"Nintendo 64","event":"Game of the Month · 1996-2001","month":"2026-10","source_url":"https://retrohandhelds.gg/game-of-the-month-october-2026/"},{"title":"Hotel Dusk: Room 215","system":"Nintendo DS","event":"Game of the Month · 2002+","month":"2026-10","source_url":"https://retrohandhelds.gg/game-of-the-month-october-2026/"},{"title":"Xenogears","system":"PlayStation 1","event":"Game of the Quarter","month":"2026-10","period":"Q4 2026","source_url":"https://retrohandhelds.gg/game-of-the-month-october-2026/"}],"access":"Public announcements; join Discord to participate","discussion_url":"https://retrohandhelds.gg/community/","integration":"public-announcement-snapshot"},{"id":"techdweeb-dgs","name":"TechDweeb — Dusty Game Society","home_url":"https://techdweeb.straw.page/dustygamesociety","description":"Monthly shared retro game, members discuss it on Discord and may submit reviews featured in a video.","access":"Members-only game discussions (Patreon Dweeb tier)","integration":"directory-only; no permission for private content","picks":[]},{"id":"retrogaming-discord","name":"The Retrogaming Discord","home_url":"https://discord.me/retro","description":"Community-voted Game of the Month, play-alongs and game reviews. Club described in a third-party server listing; organizer not yet verified.","access":"Public server directory; current pick unverified","integration":"directory-only; organizer confirmation needed","picks":[]},{"id":"inuksaiyan","name":"InukSaiyan Retro Game Club","home_url":"https://inuksaiyan.github.io/Retro-Game-Clubs/","description":"Our own retro gaming club. Community voting, discussion and member reviews planned; no official monthly pick yet.","picks":[],"access":"Future community","integration":"planned"}]};
+const storagePrefix="inuksaiyan-community-widget-v04-";
+function load(key,defaultValue){try{const value=JSON.parse(localStorage.getItem(storagePrefix+key));return value===null?defaultValue:value}catch(e){return defaultValue}}
+function save(key,value){try{localStorage.setItem(storagePrefix+key,JSON.stringify(value))}catch(e){}}
+let followed=load("followed",[]),statuses=load("statuses",{}),reviews=load("reviews",{});
+if(!Array.isArray(followed))followed=[];
+if(!statuses||typeof statuses!=="object"||Array.isArray(statuses))statuses={};
+if(!reviews||typeof reviews!=="object"||Array.isArray(reviews))reviews={};
+let activeTab="picks",filter="all",randomPick=null;
+const byId=id=>document.getElementById(id);
+function el(type,css,text){const node=document.createElement(type);if(css)node.className=css;if(text!==undefined)node.textContent=text;return node}
+function link(label,target){try{const u=new URL(target);if(u.protocol!=="https:")return null;const a=el("a","btn",label);a.href=u.href;a.target="_blank";a.rel="noopener noreferrer";return a}catch(e){return null}}
+function allPicks(){return feed.clubs.flatMap(c=>(c.picks||[]).map((p,i)=>({club:c,pick:p,id:c.id+"|"+p.month+"|"+p.title+"|"+i})))}
+function selectedPicks(){const all=allPicks();return all.filter(p=>filter==="followed"?followed.includes(p.club.id):filter==="monthly"?p.pick.event.toLowerCase().includes("game of the month"):true)}
+function isArchive(month){const d=new Date();return month!==d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
+function renderPick(item){
+ const card=el("article","card");card.appendChild(el("div","source",item.club.name));card.appendChild(el("h2","",item.pick.title));
+ card.appendChild(el("div","desc",item.pick.system+" · "+item.pick.event+" · "+(item.pick.period||item.pick.month)+(isArchive(item.pick.month)?" · Archived month":"")));
+ const buttons=el("div","actions");
+ const state=statuses[item.id]||"";
+ const playing=el("button","btn"+(state==="playing"?" active":""),state==="playing"?"✓ Playing":"▶ I'm playing");playing.type="button";
+ playing.addEventListener("click",()=>{statuses[item.id]=state==="playing"?"":"playing";save("statuses",statuses);refresh()});
+ const finished=el("button","btn"+(state==="finished"?" active":""),state==="finished"?"✓ Finished":"✓ Finished it");finished.type="button";
+ finished.addEventListener("click",()=>{statuses[item.id]=state==="finished"?"":"finished";save("statuses",statuses);refresh()});
+ buttons.append(playing,finished);
+ const discussion=link("💬 Discuss / review ↗",item.pick.discussion_url||item.pick.source_url||item.club.discussion_url||item.club.home_url);if(discussion)buttons.appendChild(discussion);
+ const note=el("button","btn","✎ My notes");note.type="button";buttons.appendChild(note);card.appendChild(buttons);
+ const notes=el("div","notes");const input=el("textarea");input.placeholder="Private thoughts about this game…";input.maxLength=700;input.value=typeof reviews[item.id]==="string"?reviews[item.id]:"";
+ const store=el("button","btn","Save note");store.type="button";const response=el("span","muted","");
+ store.addEventListener("click",()=>{reviews[item.id]=input.value;save("reviews",reviews);response.textContent=" Saved locally ✓"});
+ notes.append(input,store,response);card.appendChild(notes);
+ note.addEventListener("click",()=>notes.classList.toggle("open"));return card;
+}
+function renderPicks(){const wrap=byId("picks");wrap.replaceChildren();const picks=selectedPicks();
+ byId("pick-count").textContent=picks.length+" verified event picks";
+ if(picks.length){for(const p of picks)wrap.appendChild(renderPick(p))}
+ else wrap.appendChild(el("div","empty",filter==="followed"?"Open Clubs and follow a community to see its picks.":"No publicly verified picks in this category."));
+ const box=byId("suggestion");box.replaceChildren();if(randomPick){const card=el("div","card");card.appendChild(el("div","source","YOUR RANDOM PICK"));card.appendChild(el("h2","",randomPick.pick.title));card.appendChild(el("div","desc",randomPick.club.name+" · "+randomPick.pick.system));box.appendChild(card)}
+}
+function renderClubs(){const wrap=byId("clubs");wrap.replaceChildren();
+ for(const club of feed.clubs){const card=el("div","card"),row=el("div","row"),text=el("div");
+ text.appendChild(el("h2","",club.name));text.appendChild(el("div","desc",club.access||"Independent community"));
+ const checkbox=el("input","follow");checkbox.type="checkbox";checkbox.checked=followed.includes(club.id);checkbox.setAttribute("aria-label","Follow "+club.name);
+ checkbox.addEventListener("change",()=>{followed=checkbox.checked?[...new Set([...followed,club.id])]:followed.filter(x=>x!==club.id);save("followed",followed);randomPick=null;renderPicks()});
+ row.append(text,checkbox);card.appendChild(row);
+ card.appendChild(el("p","desc",club.description));
+ card.appendChild(el("p","desc",(club.picks||[]).length+" public picks in Oct 2026 snapshot"));
+ const actions=el("div","actions");
+ const visit=link("Visit club ↗",club.home_url);if(visit)actions.appendChild(visit);
+ const chat=link("Discussions ↗",club.discussion_url||club.discord_url);if(chat)actions.appendChild(chat);
+ card.appendChild(actions);wrap.appendChild(card)}
+}
+function renderProgress(){const wrap=byId("plays");wrap.replaceChildren();const plays=allPicks().filter(p=>["playing","finished"].includes(statuses[p.id]));
+ byId("progress-count").textContent=plays.filter(p=>statuses[p.id]==="playing").length+" playing · "+plays.filter(p=>statuses[p.id]==="finished").length+" finished";
+ if(!plays.length)wrap.appendChild(el("div","empty","Your progress is empty. Mark a game Playing or Finished under Picks."));
+ else for(const item of plays)wrap.appendChild(renderPick(item));
+}
+function refresh(){renderPicks();renderClubs();renderProgress()}
+for(const button of document.querySelectorAll("[data-tab]"))button.addEventListener("click",()=>{
+ activeTab=button.dataset.tab;document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id==="view-"+activeTab));
+ document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===button));
+});
+for(const button of document.querySelectorAll("[data-filter]"))button.addEventListener("click",()=>{
+ filter=button.dataset.filter;randomPick=null;document.querySelectorAll("[data-filter]").forEach(x=>x.classList.toggle("active",x===button));renderPicks()
+});
+byId("random").addEventListener("click",()=>{const pool=selectedPicks();if(!pool.length){byId("view-clubs").classList.add("active");byId("view-picks").classList.remove("active");document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x.dataset.tab==="clubs"));return}randomPick=pool[Math.floor(Math.random()*pool.length)];renderPicks()});
+refresh();
+</script></body></html>
