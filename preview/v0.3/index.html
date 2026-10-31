@@ -77,6 +77,11 @@
   .tag { color: #8ed9ef; font-size: .8rem; font-weight: 750; }
   #game { margin: 9px 0; color: #fff; font-size: clamp(1.5rem, 6vw, 2rem); line-height: 1.25; }
   #details { color: #cbd6df; }
+  .aspect-panel { margin: 14px auto 0; max-width: 410px; text-align: left; background: #142636; border: 1px solid #45617a; border-radius: 12px; padding: 12px 14px; }
+  .aspect-heading { color: #c3d5df; display: block; font-size: .77rem; font-weight: 700; letter-spacing: .025em; }
+  .aspect-value { display: block; color: #a8ebf7; font-size: 1.2rem; font-weight: 850; line-height: 1.4; }
+  .aspect-note { display: block; color: #b6c5d2; font-size: .79rem; line-height: 1.45; }
+  .aspect-guide { margin: 10px auto 0; color: #b4c5d1; font-size: .76rem; text-align: left; }
   #save { margin-top: 10px; }
   .panel {
     margin-top: 20px; padding: 18px; border: 1px solid #34465a;
@@ -156,6 +161,12 @@
     <div class="tag" id="tag">YOUR NEXT ADVENTURE</div>
     <h2 id="game">Ready when you are!</h2>
     <div id="details">Choose a system or genre, or surprise yourself.</div>
+    <div id="aspect-panel" class="aspect-panel" hidden>
+      <span class="aspect-heading">📺 Expected aspect ratio · Original game</span>
+      <strong id="aspect-value" class="aspect-value"></strong>
+      <span id="aspect-note" class="aspect-note"></span>
+    </div>
+    <p id="aspect-guide" class="aspect-guide" hidden>Original/typical display, not a widescreen patch. Actual presentation can differ with the game's options or emulator settings.</p>
     <button id="save" class="secondary" type="button" hidden>☆ Save for later</button>
   </section>
 
@@ -299,6 +310,37 @@ const catalog = {
   ]
 };
 
+// Expected unmodified presentation, not a claim that every game supports widescreen.
+const aspectBySystem = {
+  "NES": ["4:3", "Traditional TV/CRT presentation; raw pixel dimensions differ."],
+  "SNES": ["4:3", "Typical TV/CRT presentation (native pixel proportions differ)."],
+  "Game Boy": ["10:9", "Original 160×144 pixel screen; nearly square."],
+  "Game Boy Color": ["10:9", "Original 160×144 pixel screen; nearly square."],
+  "Game Boy Advance": ["3:2", "Original 240×160 screen."],
+  "Sega Genesis": ["4:3", "Typical CRT display presentation."],
+  "Nintendo 64": ["4:3", "Most games default to 4:3; some provide other display options."],
+  "PlayStation 1": ["4:3", "Most games use a 4:3 display."],
+  "Dreamcast": ["4:3", "Typical console display mode."],
+  "PSP": ["16:9", "Widescreen handheld display (480×272 pixels)."],
+  "Nintendo DS": ["4:3 per screen", "Two separate 256×192 screens; the combined layout depends on the emulator."],
+  "GameCube": ["4:3", "Typical unmodified default; some titles offer native 16:9."],
+  "Wii": ["4:3 or 16:9", "Depends on the game's widescreen support and Wii display settings."],
+  "PlayStation 2": ["4:3", "Typical default; some games offer widescreen options or compatible patches."],
+  "Arcade": ["Varies", "Original arcade display may be landscape or portrait, depending on the game."],
+  "Sega Saturn": ["4:3", "Typical CRT display presentation."]
+};
+// Verified cabinet orientation for a few common arcade examples.
+const aspectByGame = {
+  "Arcade|Pac-Man": ["3:4 portrait", "Original upright arcade cabinet uses a portrait monitor."],
+  "Arcade|Ms. Pac-Man": ["3:4 portrait", "Original upright arcade cabinet uses a portrait monitor."],
+  "Arcade|Galaga": ["3:4 portrait", "Original upright arcade cabinet uses a portrait monitor."]
+};
+function aspectInfo(game) {
+  const [ratio, note] = aspectByGame[game.id] || aspectBySystem[game.system] ||
+    ["Varies", "Check the game's original display options."];
+  return {ratio, note};
+}
+
 const games = Object.entries(catalog).flatMap(([system, titles]) =>
   titles.map(([title, genre]) => ({title, genre, system, id: system + "|" + title}))
 );
@@ -374,7 +416,7 @@ function makeItem(game, removable) {
   title.textContent = game.title;
   const meta = document.createElement("span");
   meta.className = "meta";
-  meta.textContent = game.system + " · " + game.genre;
+  meta.textContent = game.system + " · " + game.genre + " · " + aspectInfo(game).ratio;
   wrapper.append(title, meta);
   if (removable) {
     li.className = "saved-row";
@@ -438,6 +480,11 @@ function pickGame() {
   $("tag").textContent = sourceSelect.value === "Library" ? "FROM YOUR LIBRARY" : sourceSelect.value === "ForMe" ? "PICKED FOR YOU" : "YOUR PICK";
   $("game").textContent = current.title;
   $("details").textContent = current.system + " · " + current.genre;
+  const aspect = aspectInfo(current);
+  $("aspect-value").textContent = aspect.ratio;
+  $("aspect-note").textContent = aspect.note;
+  $("aspect-panel").hidden = false;
+  $("aspect-guide").hidden = false;
   recent = [current, ...recent.filter(g => g.id !== current.id)].slice(0, 5);
   showRecent();
   showSaveButton();
@@ -475,7 +522,7 @@ function gameRow(g, context) {
   title.textContent = g.title;
   const meta = document.createElement("span");
   meta.className = "meta";
-  meta.textContent = g.system + " · " + g.genre;
+  meta.textContent = g.system + " · " + g.genre + " · " + aspectInfo(g).ratio;
   desc.append(title, meta);
   const actions = document.createElement("div");
   actions.className = "list-actions";
