@@ -97,7 +97,7 @@ h2{font-size:20px;margin:0 0 14px}h3{font-size:17px;margin:0 0 8px}p{margin:0 0 
 <div class="hero"><div class="kicker">🎲 Can't choose?</div><h2 style="font-size:28px;margin-top:10px">Let the games choose you.</h2><p>Switch to the full Game Picker for filtering, personalized recommendations, wishlist management and file-name matching.</p><div class="actions"><a class="btn primary" href="../../">Open Game Picker v0.3 ↗</a><button class="btn" type="button" id="pick-local">Pick from my local list</button></div><div id="picker-result" role="status" aria-live="polite" style="margin-top:12px"></div></div>
 <div class="panel" style="margin-bottom:15px">
 <h2>🌐 Follow other game clubs</h2>
-<p class="muted">Choose which communities' Game of the Month picks to include. Public announcements are credited and linked below. This is a manually verified October 2026 snapshot—not a live Discord connection or an official partnership.</p>
+<p class="muted">Choose which communities' Game of the Month picks to include. Public announcements are credited and linked below. These are hand-verified October 2026 public announcements and club directory entries—not live Discord connections or official partnerships. Member-only Discord reviews stay private.</p>
 <div id="club-list" class="club-list" aria-live="polite"><p class="hint">Loading public club picks…</p></div>
 <div class="actions"><button type="button" id="pick-club" class="btn primary">🎲 Pick from followed clubs</button><button type="button" id="refresh-clubs" class="btn">↻ Refresh snapshot</button></div>
 <div class="club-result" id="club-result" role="status" aria-live="polite"></div>
@@ -159,13 +159,22 @@ function renderClubs(){
   input.addEventListener("change",()=>{followed=input.checked?[...new Set([...followed,club.id])]:followed.filter(id=>id!==club.id);saveFollowed();document.getElementById("club-result").textContent="";updateClubStatus()});
   const heading=element("span",null,club.name);label.append(input,heading);card.append(label);
   card.appendChild(element("p","hint",club.description));
+  card.appendChild(element("p","hint","Access: "+(club.access||"Visit community for rules")));
   const picks=Array.isArray(club.picks)?club.picks:[];
-  if(!picks.length)card.appendChild(element("p","hint","No announced monthly picks in this snapshot yet."));
+  if(!picks.length)card.appendChild(element("p","hint","No publicly verified current picks in this snapshot. Restricted picks aren't copied here."));
   picks.forEach(pick=>{
    const p=element("div","club-pick",pick.title+" · "+pick.system);
-   const detail=element("div","hint",pick.event+" · "+pick.month);p.appendChild(detail);card.appendChild(p);
+   const detail=element("div","hint",pick.event+" · "+pick.month);p.appendChild(detail);
+   if(pick.source_url){
+    const source=element("a",null,"See original pick ↗");source.href=cleanUrl(pick.source_url);source.target="_blank";source.rel="noopener noreferrer";p.appendChild(source);
+   }
+   card.appendChild(p);
   });
-  const link=element("a",null,"Visit the club ↗");link.href=cleanUrl(club.home_url);link.target="_blank";link.rel="noopener noreferrer";card.appendChild(link);wrap.appendChild(card);
+  const links=element("div","actions");
+  const link=element("a","btn","Visit club ↗");link.href=cleanUrl(club.home_url);link.target="_blank";link.rel="noopener noreferrer";links.appendChild(link);
+  const discussion=club.discussion_url||club.discord_url;
+  if(discussion){const chat=element("a","btn","Discuss / review ↗");chat.href=cleanUrl(discussion);chat.target="_blank";chat.rel="noopener noreferrer";links.appendChild(chat)}
+  card.appendChild(links);wrap.appendChild(card);
  }
  updateClubStatus();
 }
