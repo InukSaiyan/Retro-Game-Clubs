@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InukSaiyan Retro Game Club</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    min-height: 100vh;
+    background: #101b27;
+    color: #f4f1e8;
+    font-family: system-ui, sans-serif;
+    text-align: center;
+  }
+  main { max-width: 440px; margin: 40px auto; }
+  h1 { color: #8ed9ef; font-size: 1.9rem; }
+  p { color: #bbc8d3; }
+  select, button {
+    width: 100%;
+    padding: 16px;
+    margin: 10px 0;
+    border-radius: 12px;
+    font-size: 1rem;
+  }
+  select {
+    background: #243446;
+    color: white;
+    border: 1px solid #526477;
+  }
+  button {
+    background: #8ed9ef;
+    border: none;
+    color: #101b27;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  #result {
+    margin-top: 24px;
+    padding: 22px;
+    background: #223246;
+    border-radius: 16px;
+  }
+  #game { font-size: 1.5rem; font-weight: bold; }
+  small { color: #a5b8ca; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🎮 INUKSAIYAN</h1>
+  <h2>Retro Game Club</h2>
+  <p>Can't decide what to play?</p>
+
+  <select id="system" aria-label="Choose a system">
+    <option value="All">Surprise me!</option>
+    <option value="NES">NES</option>
+    <option value="SNES">SNES</option>
+    <option value="GBC">Game Boy Color</option>
+    <option value="GBA">Game Boy Advance</option>
+    <option value="Genesis">Sega Genesis</option>
+    <option value="PS1">PlayStation 1</option>
+  </select>
+
+  <button onclick="pickGame()">Pick My Game!</button>
+
+  <div id="result" aria-live="polite">
+    <div id="game">Your next adventure awaits!</div>
+    <p id="console">Select a system to begin.</p>
+  </div>
+
+  <p><small>Made by InukSaiyan • v0.1</small></p>
+</main>
+
+<script>
+const games = [
+  ["Dr. Mario", "NES"],
+  ["Kirby's Adventure", "NES"],
+  ["Super Mario Bros. 3", "NES"],
+  ["Super Mario World", "SNES"],
+  ["Donkey Kong Country", "SNES"],
+  ["Chrono Trigger", "SNES"],
+  ["Tetris DX", "GBC"],
+  ["Pokemon Crystal", "GBC"],
+  ["Wario Land 3", "GBC"],
+  ["Metroid Fusion", "GBA"],
+  ["Wario Land 4", "GBA"],
+  ["Mario & Luigi: Superstar Saga", "GBA"],
+  ["Sonic the Hedgehog 2", "Genesis"],
+  ["Streets of Rage 2", "Genesis"],
+  ["Gunstar Heroes", "Genesis"],
+  ["Crash Bandicoot 2", "PS1"],
+  ["Castlevania: Symphony of the Night", "PS1"],
+  ["Metal Gear Solid", "PS1"]
+];
+
+let previousGame = null;
+
+function pickGame() {
+  const selected = document.getElementById("system").value;
+  let pool = games.filter(g =>
+    selected === "All" || g[1] === selected
+  );
+
+  if (pool.length > 1) {
+    pool = pool.filter(g => g[0] !== previousGame);
+  }
+
+  const game = pool[Math.floor(Math.random() * pool.length)];
+  previousGame = game[0];
+
+  document.getElementById("game").textContent = game[0];
+  document.getElementById("console").textContent = game[1];
+}
+</script>
+</body>
+</html>
