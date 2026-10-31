@@ -41,6 +41,7 @@ h2{font-size:20px;margin:0 0 14px}h3{font-size:17px;margin:0 0 8px}p{margin:0 0 
 .app-tile{min-height:105px;border-radius:15px;background:#1c3240;border:1px dashed #4b6370;padding:17px 12px;display:flex;flex-direction:column;justify-content:space-between}
 .app-tile b{font-size:14px}.app-tile span{font-size:12px;color:var(--muted)}
 .foot{margin-top:28px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.club-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:14px 0}.club-card{background:#1a3040;border:1px solid var(--line);border-radius:13px;padding:15px}.club-card label{display:flex;gap:8px;align-items:start;font-weight:800;cursor:pointer}.club-card input{accent-color:var(--ice);width:18px;height:18px;flex:0 0 auto;margin-top:3px}.club-card a{font-size:13px}.club-pick{font-size:13px;padding:5px 0;border-top:1px solid #355062}.club-result{margin-top:10px;font-weight:750;color:var(--ice)}
 @media(max-width:750px){.shell{display:block}.sidebar{position:sticky;top:0;z-index:3;height:auto;padding:8px 10px;background:#101e2bf5}.brand{display:none}nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px}.nav{display:grid;gap:2px;justify-items:center;padding:8px 2px;text-align:center;font-size:10px;border-radius:10px}.nav[aria-current=page]{box-shadow:inset 0 -3px var(--ice)}.nav .emoji{font-size:19px}.side-note{display:none}.content{padding:16px 14px 40px}.metric-row{gap:7px}.metric{padding:10px}.value{font-size:23px}}
 @media(max-width:480px){.grid{grid-template-columns:1fr}.panel-wide{grid-column:auto}.platforms{grid-template-columns:repeat(2,minmax(0,1fr))}.tag{font-size:9px;padding:3px 7px}.top{gap:6px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.view.active{animation:none}}
@@ -94,6 +95,14 @@ h2{font-size:20px;margin:0 0 14px}h3{font-size:17px;margin:0 0 8px}p{margin:0 0 
 <section class="view" id="page-picker">
 <div class="section-head"><div class="kicker">The one that started it all</div><h1>Game Picker</h1><p>Our actual v0.3 Game Picker is live. Your selected consoles, saved games, wishlist and library stay in your browser.</p></div>
 <div class="hero"><div class="kicker">🎲 Can't choose?</div><h2 style="font-size:28px;margin-top:10px">Let the games choose you.</h2><p>Switch to the full Game Picker for filtering, personalized recommendations, wishlist management and file-name matching.</p><div class="actions"><a class="btn primary" href="../../">Open Game Picker v0.3 ↗</a><button class="btn" type="button" id="pick-local">Pick from my local list</button></div><div id="picker-result" role="status" aria-live="polite" style="margin-top:12px"></div></div>
+<div class="panel" style="margin-bottom:15px">
+<h2>🌐 Follow other game clubs</h2>
+<p class="muted">Choose which communities' Game of the Month picks to include. Public announcements are credited and linked below. This is a manually verified October 2026 snapshot—not a live Discord connection or an official partnership.</p>
+<div id="club-list" class="club-list" aria-live="polite"><p class="hint">Loading public club picks…</p></div>
+<div class="actions"><button type="button" id="pick-club" class="btn primary">🎲 Pick from followed clubs</button><button type="button" id="refresh-clubs" class="btn">↻ Refresh snapshot</button></div>
+<div class="club-result" id="club-result" role="status" aria-live="polite"></div>
+<p class="hint" id="club-status" style="margin-top:9px"></p>
+</div>
 <div class="panel"><h2>Future Android upgrade</h2><p class="muted">Once the native app has permission to access games and knows the installed emulator, this page could launch a recommendation directly. This browser preview cannot.</p></div>
 </section>
 <section class="view" id="page-apps">
@@ -131,6 +140,67 @@ document.getElementById("pick-local").addEventListener("click",()=>pick("picker-
 const platforms=document.getElementById("platforms");
 systems.forEach((name,i)=>{const count=data.library.filter(x=>system(x)===name).length;const b=document.createElement("button");b.type="button";b.className="platform";const em=document.createElement("span");em.className="sys-icon";em.textContent=glyph[i];const label=document.createElement("span");label.className="sys-name";label.textContent=name;const c=document.createElement("span");c.className="sys-count";c.textContent=count+" in browser library";b.append(em,label,c);b.addEventListener("click",()=>{document.querySelectorAll(".platform").forEach(a=>a.classList.remove("selected"));b.classList.add("selected");const box=document.getElementById("console-detail");box.textContent="";const h=document.createElement("h2");h.textContent=name;box.appendChild(h);const matches=data.library.filter(x=>system(x)===name);if(!matches.length){const p=document.createElement("p");p.className="muted";p.textContent="No games in your v0.3 browser library yet for this system. Add them using the full Game Picker.";box.appendChild(p)}else{renderListIn(box,matches)}const link=document.createElement("a");link.className="btn";link.href="../../";link.textContent="Manage my game library ↗";box.appendChild(link)});platforms.appendChild(b)});
 function renderListIn(box,ids){const holder=document.createElement("div");holder.className="items";holder.style.marginBottom="12px";ids.forEach(id=>{const d=document.createElement("div");d.className="item";d.textContent=title(id);holder.appendChild(d)});box.appendChild(holder)}
+// Club follows are local and opt-in; browser preview never connects to Discord/private accounts.
+const followedKey="inuksaiyan-followed-clubs-v01";
+const clubCacheKey="inuksaiyan-clubs-snapshot-v01";
+let clubFeed=null;
+let followed=safeRead(followedKey);
+function saveFollowed(){try{localStorage.setItem(followedKey,JSON.stringify(followed))}catch(e){}}
+function cleanUrl(value){try{const u=new URL(value);return u.protocol==="https:"?u.href:"#"}catch(e){return"#"}}
+function element(tag,className,content){const n=document.createElement(tag);if(className)n.className=className;if(content!==undefined)n.textContent=content;return n}
+function renderClubs(){
+ const wrap=document.getElementById("club-list");wrap.textContent="";
+ if(!clubFeed||!Array.isArray(clubFeed.clubs)){wrap.appendChild(element("p","hint","Club snapshot unavailable. The rest of the Game Picker still works."));return}
+ const period=new Date().getFullYear()+"-"+String(new Date().getMonth()+1).padStart(2,"0");
+ for(const club of clubFeed.clubs){
+  const card=element("div","club-card");const label=element("label");
+  const input=element("input");input.type="checkbox";input.checked=followed.includes(club.id);
+  input.setAttribute("aria-label","Follow "+club.name);
+  input.addEventListener("change",()=>{followed=input.checked?[...new Set([...followed,club.id])]:followed.filter(id=>id!==club.id);saveFollowed();document.getElementById("club-result").textContent="";updateClubStatus()});
+  const heading=element("span",null,club.name);label.append(input,heading);card.append(label);
+  card.appendChild(element("p","hint",club.description));
+  const picks=Array.isArray(club.picks)?club.picks:[];
+  if(!picks.length)card.appendChild(element("p","hint","No announced monthly picks in this snapshot yet."));
+  picks.forEach(pick=>{
+   const p=element("div","club-pick",pick.title+" · "+pick.system);
+   const detail=element("div","hint",pick.event+" · "+pick.month);p.appendChild(detail);card.appendChild(p);
+  });
+  const link=element("a",null,"Visit the club ↗");link.href=cleanUrl(club.home_url);link.target="_blank";link.rel="noopener noreferrer";card.appendChild(link);wrap.appendChild(card);
+ }
+ updateClubStatus();
+}
+function updateClubStatus(){
+ const picks=clubFeed?clubFeed.clubs.filter(c=>followed.includes(c.id)).flatMap(c=>c.picks||[]):[];
+ const dates=[...new Set(picks.map(p=>p.month))];const thisMonth=new Date().getFullYear()+"-"+String(new Date().getMonth()+1).padStart(2,"0");
+ const label=dates.length&&dates.every(x=>x!==thisMonth)?" These are archived picks, not a current-month feed.":"";
+ document.getElementById("club-status").textContent=followed.length+" clubs followed · "+picks.length+" sourced picks available. Verified "+(clubFeed?.verified_on||"unknown")+"."+label;
+}
+async function loadClubs(force=false){
+ let data=null;const status=document.getElementById("club-status");
+ if(force)status.textContent="Checking published club snapshot…";
+ try{
+  const response=await fetch("./clubs.json",{cache:"no-cache"});
+  if(!response.ok)throw new Error("HTTP "+response.status);
+  data=await response.json();
+  if(data.schema_version!==1||!Array.isArray(data.clubs))throw new Error("Unexpected club data");
+  try{localStorage.setItem(clubCacheKey,JSON.stringify(data))}catch(e){}
+ }catch(e){
+  try{data=JSON.parse(localStorage.getItem(clubCacheKey)||"null")}catch(ignore){}
+  if(!data)status.textContent="Club picks unavailable offline until a successful online visit.";
+ }
+ clubFeed=data;renderClubs();
+}
+document.getElementById("pick-club").addEventListener("click",()=>{
+ const out=document.getElementById("club-result");
+ if(!clubFeed){out.textContent="Club data not loaded yet.";return}
+ const candidates=clubFeed.clubs.filter(c=>followed.includes(c.id)).flatMap(c=>(c.picks||[]).map(p=>({...p,club:c.name})));
+ if(!candidates.length){out.textContent="Follow a club with published picks above first.";return}
+ const p=candidates[Math.floor(Math.random()*candidates.length)];
+ const thisMonth=new Date().getFullYear()+"-"+String(new Date().getMonth()+1).padStart(2,"0");
+ out.textContent="🎮 "+p.title+" ("+p.system+") · "+p.club+" · "+p.month+(p.month!==thisMonth?" (archived pick)":"");
+});
+document.getElementById("refresh-clubs").addEventListener("click",()=>loadClubs(true));
+loadClubs();
 const pages=["home","consoles","achievements","picker","apps"];
 function navigate(name){if(!pages.includes(name))return;document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id==="page-"+name));document.querySelectorAll(".nav").forEach(b=>{if(b.dataset.page===name)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});history.replaceState(null,"","#"+name);window.scrollTo(0,0)}
 document.querySelectorAll(".nav").forEach(b=>b.addEventListener("click",()=>navigate(b.dataset.page)));
