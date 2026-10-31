@@ -3,116 +3,357 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>InukSaiyan Retro Game Club</title>
+<meta name="theme-color" content="#101b27">
+<title>InukSaiyan Retro Game Club — Game Picker</title>
 <style>
+  :root { color-scheme: dark; }
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    padding: 24px;
-    min-height: 100vh;
-    background: #101b27;
-    color: #f4f1e8;
-    font-family: system-ui, sans-serif;
-    text-align: center;
+    margin: 0; min-height: 100vh; padding: 20px 16px 40px;
+    background: #101b27; color: #f4f1e8;
+    font: 16px/1.5 system-ui, -apple-system, sans-serif;
   }
-  main { max-width: 440px; margin: 40px auto; }
-  h1 { color: #8ed9ef; font-size: 1.9rem; }
-  p { color: #bbc8d3; }
+  main { max-width: 540px; margin: 18px auto; }
+  header { text-align: center; margin-bottom: 24px; }
+  .eyebrow { color: #8ed9ef; font-size: .77rem; font-weight: 800; letter-spacing: .15em; }
+  h1 { margin: 7px 0 0; font-size: clamp(1.7rem, 7vw, 2.2rem); line-height: 1.2; }
+  h2 { margin: 0 0 10px; font-size: 1.15rem; }
+  p { margin: 8px 0; color: #c1ccd7; }
+  .version { color: #9dabb9; font-size: .8rem; }
+  label { display: block; margin-bottom: 7px; color: #d9e6ec; font-weight: 650; }
+  .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   select, button {
-    width: 100%;
-    padding: 16px;
-    margin: 10px 0;
-    border-radius: 12px;
-    font-size: 1rem;
+    font: inherit; border-radius: 12px;
+    min-height: 50px; width: 100%;
   }
   select {
-    background: #243446;
-    color: white;
-    border: 1px solid #526477;
+    color: #f5f8fb; background: #223246;
+    border: 1px solid #4e6276; padding: 10px 12px;
   }
-  button {
-    background: #8ed9ef;
-    border: none;
-    color: #101b27;
-    font-weight: bold;
-    cursor: pointer;
+  button { cursor: pointer; font-weight: 750; }
+  button:focus-visible, select:focus-visible {
+    outline: 3px solid #f0bd81; outline-offset: 2px;
   }
-  #result {
-    margin-top: 24px;
-    padding: 22px;
-    background: #223246;
+  .primary {
+    margin-top: 16px; border: 0; color: #10202d;
+    background: #8ed9ef; padding: 13px;
+  }
+  .secondary {
+    border: 1px solid #63788d; padding: 8px 12px;
+    background: #24364a; color: #f4f1e8;
+  }
+  .primary:active, .secondary:active { transform: translateY(1px); }
+  .hint { text-align: center; font-size: .85rem; }
+  .card {
+    margin-top: 18px; padding: 25px 18px; border-radius: 18px;
+    background: #213247; text-align: center;
+    border: 1px solid #34465a;
+  }
+  .tag { color: #8ed9ef; font-size: .8rem; font-weight: 750; }
+  #game { margin: 9px 0; color: #fff; font-size: clamp(1.5rem, 6vw, 2rem); line-height: 1.25; }
+  #details { color: #cbd6df; }
+  #save { margin-top: 10px; }
+  .panel {
+    margin-top: 20px; padding: 18px; border: 1px solid #34465a;
     border-radius: 16px;
   }
-  #game { font-size: 1.5rem; font-weight: bold; }
-  small { color: #a5b8ca; }
+  .panel h2 { margin-bottom: 6px; }
+  .panel p { font-size: .87rem; }
+  ul { list-style: none; margin: 8px 0 0; padding: 0; }
+  li { padding: 10px 0; border-top: 1px solid #334559; }
+  li:first-child { border-top: 0; }
+  .meta { display: block; color: #aebdcb; font-size: .78rem; }
+  .saved-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+  .saved-row span { min-width: 0; }
+  .remove {
+    width: auto; min-height: 35px; flex: none; padding: 5px 9px;
+    border: 1px solid #62768b; border-radius: 8px;
+    color: #e4edf3; background: #23374a; font-size: .78rem;
+  }
+  .empty { color: #aebdcb; }
+  footer { margin: 25px 0; text-align: center; color: #aebdcb; font-size: .82rem; }
+  @media (max-width: 360px) { .filters { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
 </head>
 <body>
 <main>
-  <h1>🎮 INUKSAIYAN</h1>
-  <h2>Retro Game Club</h2>
-  <p>Can't decide what to play?</p>
+  <header>
+    <div class="eyebrow">🎮 INUKSAIYAN</div>
+    <h1>Retro Game Club</h1>
+    <p>Can't decide what to play?</p>
+    <div class="version">Game Picker · v0.2 development</div>
+  </header>
 
-  <select id="system" aria-label="Choose a system">
-    <option value="All">Surprise me!</option>
-    <option value="NES">NES</option>
-    <option value="SNES">SNES</option>
-    <option value="GBC">Game Boy Color</option>
-    <option value="GBA">Game Boy Advance</option>
-    <option value="Genesis">Sega Genesis</option>
-    <option value="PS1">PlayStation 1</option>
-  </select>
+  <section aria-label="Game filters">
+    <div class="filters">
+      <div>
+        <label for="system">System</label>
+        <select id="system"><option value="All">All systems</option></select>
+      </div>
+      <div>
+        <label for="genre">Genre</label>
+        <select id="genre"><option value="All">All genres</option></select>
+      </div>
+    </div>
+    <p id="count" class="hint"></p>
+    <button id="pick" class="primary" type="button">🎲 Pick My Game!</button>
+  </section>
 
-  <button onclick="pickGame()">Pick My Game!</button>
+  <section id="result" class="card" aria-live="polite" aria-atomic="true">
+    <div class="tag" id="tag">YOUR NEXT ADVENTURE</div>
+    <h2 id="game">Ready when you are!</h2>
+    <div id="details">Choose a system or genre, or surprise yourself.</div>
+    <button id="save" class="secondary" type="button" hidden>☆ Save for later</button>
+  </section>
 
-  <div id="result" aria-live="polite">
-    <div id="game">Your next adventure awaits!</div>
-    <p id="console">Select a system to begin.</p>
-  </div>
+  <section class="panel" aria-labelledby="saved-title">
+    <h2 id="saved-title">☆ Saved games <span id="saved-count" class="version"></span></h2>
+    <p>Your shortlist stays in this browser, not on a server.</p>
+    <ul id="saved-list"></ul>
+  </section>
 
-  <p><small>Made by InukSaiyan • v0.1</small></p>
+  <section class="panel" aria-labelledby="recent-title">
+    <h2 id="recent-title">Recent picks</h2>
+    <ul id="recent-list"><li class="empty">No picks yet. Give it a spin!</li></ul>
+  </section>
+
+  <footer>
+    Made by InukSaiyan · v0.2<br>
+    Game recommendations only — no ROMs, downloads, or emulator launching.
+  </footer>
 </main>
 
 <script>
-const games = [
-  ["Dr. Mario", "NES"],
-  ["Kirby's Adventure", "NES"],
-  ["Super Mario Bros. 3", "NES"],
-  ["Super Mario World", "SNES"],
-  ["Donkey Kong Country", "SNES"],
-  ["Chrono Trigger", "SNES"],
-  ["Tetris DX", "GBC"],
-  ["Pokemon Crystal", "GBC"],
-  ["Wario Land 3", "GBC"],
-  ["Metroid Fusion", "GBA"],
-  ["Wario Land 4", "GBA"],
-  ["Mario & Luigi: Superstar Saga", "GBA"],
-  ["Sonic the Hedgehog 2", "Genesis"],
-  ["Streets of Rage 2", "Genesis"],
-  ["Gunstar Heroes", "Genesis"],
-  ["Crash Bandicoot 2", "PS1"],
-  ["Castlevania: Symphony of the Night", "PS1"],
-  ["Metal Gear Solid", "PS1"]
-];
+"use strict";
+// Hand-picked sample recommendations. No copyrighted game files are hosted.
+const catalog = {
+  "NES": [
+    ["Super Mario Bros. 3","Platformer"], ["Kirby's Adventure","Platformer"],
+    ["The Legend of Zelda","Adventure"], ["Dr. Mario","Puzzle"],
+    ["Mega Man 2","Action"], ["Punch-Out!!","Sports"],
+    ["Tetris","Puzzle"], ["Contra","Shooter"], ["Final Fantasy","RPG"]
+  ],
+  "SNES": [
+    ["Super Mario World","Platformer"], ["Donkey Kong Country","Platformer"],
+    ["Chrono Trigger","RPG"], ["The Legend of Zelda: A Link to the Past","Adventure"],
+    ["Super Metroid","Adventure"], ["Street Fighter II Turbo","Fighting"],
+    ["F-Zero","Racing"], ["EarthBound","RPG"], ["Tetris Attack","Puzzle"]
+  ],
+  "Game Boy": [
+    ["Tetris","Puzzle"], ["Kirby's Dream Land","Platformer"],
+    ["Super Mario Land 2: 6 Golden Coins","Platformer"],
+    ["Wario Land: Super Mario Land 3","Platformer"], ["Pokémon Red","RPG"],
+    ["Dr. Mario","Puzzle"], ["Donkey Kong (1994)","Puzzle"]
+  ],
+  "Game Boy Color": [
+    ["Pokémon Crystal","RPG"], ["Wario Land 3","Platformer"],
+    ["Tetris DX","Puzzle"], ["The Legend of Zelda: Oracle of Seasons","Adventure"],
+    ["Shantae","Platformer"], ["Mario Golf","Sports"], ["Dragon Warrior III","RPG"]
+  ],
+  "Game Boy Advance": [
+    ["Metroid Fusion","Adventure"], ["Metroid: Zero Mission","Adventure"],
+    ["Wario Land 4","Platformer"], ["Mario & Luigi: Superstar Saga","RPG"],
+    ["Advance Wars","Strategy"], ["Golden Sun","RPG"],
+    ["Castlevania: Aria of Sorrow","Action"], ["Mario Kart: Super Circuit","Racing"],
+    ["Kirby: Nightmare in Dream Land","Platformer"]
+  ],
+  "Sega Genesis": [
+    ["Sonic the Hedgehog 2","Platformer"], ["Streets of Rage 2","Action"],
+    ["Gunstar Heroes","Shooter"], ["Shinobi III","Action"],
+    ["Phantasy Star IV","RPG"], ["Sonic 3 & Knuckles","Platformer"],
+    ["Columns","Puzzle"], ["Ristar","Platformer"]
+  ],
+  "Nintendo 64": [
+    ["Super Mario 64","Platformer"], ["The Legend of Zelda: Ocarina of Time","Adventure"],
+    ["The Legend of Zelda: Majora's Mask","Adventure"], ["Mario Kart 64","Racing"],
+    ["Star Fox 64","Shooter"], ["Banjo-Kazooie","Platformer"],
+    ["Paper Mario","RPG"], ["F-Zero X","Racing"]
+  ],
+  "PlayStation 1": [
+    ["Crash Bandicoot 2: Cortex Strikes Back","Platformer"],
+    ["Castlevania: Symphony of the Night","Action"], ["Metal Gear Solid","Action"],
+    ["Final Fantasy VII","RPG"], ["Gran Turismo 2","Racing"],
+    ["Tekken 3","Fighting"], ["Resident Evil 2","Adventure"],
+    ["Spyro: Year of the Dragon","Platformer"]
+  ],
+  "Dreamcast": [
+    ["Crazy Taxi","Racing"], ["Sonic Adventure 2","Platformer"],
+    ["Jet Set Radio","Action"], ["Power Stone","Fighting"],
+    ["Soulcalibur","Fighting"], ["Skies of Arcadia","RPG"],
+    ["ChuChu Rocket!","Puzzle"], ["Shenmue","Adventure"]
+  ],
+  "PSP": [
+    ["Lumines","Puzzle"], ["Daxter","Platformer"],
+    ["LocoRoco","Platformer"], ["Patapon","Rhythm"],
+    ["God of War: Chains of Olympus","Action"], ["Burnout Legends","Racing"],
+    ["Crisis Core: Final Fantasy VII","RPG"], ["Monster Hunter Freedom Unite","Action"]
+  ],
+  "Nintendo DS": [
+    ["New Super Mario Bros.","Platformer"], ["Pokémon Platinum","RPG"],
+    ["Mario Kart DS","Racing"], ["Professor Layton and the Curious Village","Puzzle"],
+    ["Advance Wars: Dual Strike","Strategy"], ["Ghost Trick: Phantom Detective","Puzzle"],
+    ["The Legend of Zelda: Phantom Hourglass","Adventure"], ["Tetris DS","Puzzle"]
+  ],
+  "GameCube": [
+    ["The Legend of Zelda: The Wind Waker","Adventure"], ["Metroid Prime","Adventure"],
+    ["Super Mario Sunshine","Platformer"], ["Luigi's Mansion","Adventure"],
+    ["Mario Kart: Double Dash!!","Racing"], ["Pikmin 2","Strategy"],
+    ["F-Zero GX","Racing"], ["Paper Mario: The Thousand-Year Door","RPG"]
+  ],
+  "Wii": [
+    ["Super Mario Galaxy","Platformer"], ["Wii Sports","Sports"],
+    ["Donkey Kong Country Returns","Platformer"], ["Kirby's Epic Yarn","Platformer"],
+    ["New Super Mario Bros. Wii","Platformer"], ["The Legend of Zelda: Twilight Princess","Adventure"],
+    ["Metroid Prime 3: Corruption","Adventure"], ["WarioWare: Smooth Moves","Action"]
+  ],
+  "PlayStation 2": [
+    ["Ōkami","Adventure"], ["God of War II","Action"],
+    ["Kingdom Hearts II","RPG"], ["Shadow of the Colossus","Adventure"],
+    ["Gran Turismo 4","Racing"], ["Katamari Damacy","Puzzle"],
+    ["Ratchet & Clank: Going Commando","Platformer"], ["SSX 3","Sports"]
+  ],
+  "Arcade": [
+    ["Pac-Man","Puzzle"], ["Ms. Pac-Man","Puzzle"],
+    ["Metal Slug","Shooter"], ["Puzzle Bobble","Puzzle"],
+    ["Street Fighter II","Fighting"], ["Galaga","Shooter"],
+    ["Bubble Bobble","Platformer"], ["Out Run","Racing"]
+  ],
+  "Sega Saturn": [
+    ["NiGHTS into Dreams","Action"], ["Sega Rally Championship","Racing"],
+    ["Panzer Dragoon","Shooter"], ["Guardian Heroes","Action"],
+    ["Saturn Bomberman","Action"], ["Radiant Silvergun","Shooter"]
+  ]
+};
 
-let previousGame = null;
+const games = Object.entries(catalog).flatMap(([system, titles]) =>
+  titles.map(([title, genre]) => ({title, genre, system, id: system + "|" + title}))
+);
+const $ = id => document.getElementById(id);
+const systemSelect = $("system");
+const genreSelect = $("genre");
+const saveButton = $("save");
+let current = null;
+let previous = null;
+let recent = [];
+let saved = [];
 
-function pickGame() {
-  const selected = document.getElementById("system").value;
-  let pool = games.filter(g =>
-    selected === "All" || g[1] === selected
-  );
+try {
+  const raw = JSON.parse(localStorage.getItem("inuksaiyan-saved-v02") || "[]");
+  if (Array.isArray(raw)) saved = raw.filter(id => games.some(g => g.id === id)).slice(0, 100);
+} catch (_) { saved = []; }
 
-  if (pool.length > 1) {
-    pool = pool.filter(g => g[0] !== previousGame);
-  }
-
-  const game = pool[Math.floor(Math.random() * pool.length)];
-  previousGame = game[0];
-
-  document.getElementById("game").textContent = game[0];
-  document.getElementById("console").textContent = game[1];
+function addOption(select, value) {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = value;
+  select.appendChild(option);
 }
+Object.keys(catalog).forEach(s => addOption(systemSelect, s));
+[...new Set(games.map(g => g.genre))].sort().forEach(g => addOption(genreSelect, g));
+
+function filteredGames() {
+  return games.filter(g =>
+    (systemSelect.value === "All" || g.system === systemSelect.value) &&
+    (genreSelect.value === "All" || g.genre === genreSelect.value)
+  );
+}
+function updateCount() {
+  const count = filteredGames().length;
+  $("count").textContent = count + " " + (count === 1 ? "game" : "games") + " in this selection";
+  $("pick").disabled = count === 0;
+  $("pick").textContent = count ? "🎲 Pick My Game!" : "No matching games";
+}
+function makeItem(game, removable) {
+  const li = document.createElement("li");
+  const wrapper = document.createElement("span");
+  const title = document.createElement("strong");
+  title.textContent = game.title;
+  const meta = document.createElement("span");
+  meta.className = "meta";
+  meta.textContent = game.system + " · " + game.genre;
+  wrapper.append(title, meta);
+  if (removable) {
+    li.className = "saved-row";
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "remove";
+    remove.textContent = "Remove";
+    remove.setAttribute("aria-label", "Remove " + game.title);
+    remove.addEventListener("click", () => {
+      saved = saved.filter(id => id !== game.id);
+      persistSaved();
+      showSaved();
+      showSaveButton();
+    });
+    li.append(wrapper, remove);
+  } else {
+    li.appendChild(wrapper);
+  }
+  return li;
+}
+function showRecent() {
+  $("recent-list").replaceChildren();
+  if (!recent.length) {
+    const li = document.createElement("li");
+    li.className = "empty";
+    li.textContent = "No picks yet. Give it a spin!";
+    $("recent-list").appendChild(li);
+    return;
+  }
+  recent.forEach(g => $("recent-list").appendChild(makeItem(g, false)));
+}
+function showSaved() {
+  $("saved-list").replaceChildren();
+  $("saved-count").textContent = "(" + saved.length + ")";
+  if (!saved.length) {
+    const li = document.createElement("li");
+    li.className = "empty";
+    li.textContent = "Nothing saved yet.";
+    $("saved-list").appendChild(li);
+    return;
+  }
+  saved.forEach(id => {
+    const game = games.find(g => g.id === id);
+    if (game) $("saved-list").appendChild(makeItem(game, true));
+  });
+}
+function persistSaved() {
+  try { localStorage.setItem("inuksaiyan-saved-v02", JSON.stringify(saved)); }
+  catch (_) { /* Private browsing or restricted storage: in-memory list still works. */ }
+}
+function showSaveButton() {
+  saveButton.hidden = !current;
+  if (current) saveButton.textContent = saved.includes(current.id) ? "★ Saved — tap to remove" : "☆ Save for later";
+}
+function pickGame() {
+  let pool = filteredGames();
+  if (!pool.length) return;
+  if (pool.length > 1) pool = pool.filter(g => g.id !== previous);
+  current = pool[Math.floor(Math.random() * pool.length)];
+  previous = current.id;
+  $("tag").textContent = "YOUR PICK";
+  $("game").textContent = current.title;
+  $("details").textContent = current.system + " · " + current.genre;
+  recent = [current, ...recent.filter(g => g.id !== current.id)].slice(0, 5);
+  showRecent();
+  showSaveButton();
+}
+$("pick").addEventListener("click", pickGame);
+systemSelect.addEventListener("change", updateCount);
+genreSelect.addEventListener("change", updateCount);
+saveButton.addEventListener("click", () => {
+  if (!current) return;
+  saved = saved.includes(current.id)
+    ? saved.filter(id => id !== current.id)
+    : [...saved, current.id];
+  persistSaved();
+  showSaved();
+  showSaveButton();
+});
+updateCount();
+showSaved();
+showRecent();
 </script>
 </body>
 </html>
