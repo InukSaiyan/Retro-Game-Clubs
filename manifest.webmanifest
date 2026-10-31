@@ -1,0 +1,10 @@
+{
+  "name": "InukSaiyan Retro Game Club — Game Picker v0.3",
+  "short_name": "Retro Game Club",
+  "description": "A lightweight retro game picker with personal interests and a local game list.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101b27",
+  "theme_color": "#101b27"
+}
