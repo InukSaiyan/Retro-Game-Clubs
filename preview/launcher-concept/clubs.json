@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "verified_on": "2026-10-31",
-  "description": "Hand-verified public October 2026 club announcements. Snapshot only: not a live feed, club API, Discord integration or official partnership.",
+  "description": "Community club directory: selected public Oct 2026 event picks are hand-verified snapshots. No Discord message reading, live syncing, private Patreon access, or official partnerships.",
   "clubs": [
     {
       "id": "joeys-prgc",
       "name": "Joey's Play Retro Games Club",
       "home_url": "https://www.joeysretrohandhelds.com/play-retro-games-club/",
-      "description": "Play Retro Games Club — monthly, weekly and seasonal community games",
+      "description": "Discord-based play-along with member discussions, nominations and votes, weekly/monthly/seasonal picks and romhack events.",
       "picks": [
         {
           "title": "Super Mario Sunshine",
@@ -23,13 +23,17 @@
           "month": "2026-10",
           "source_url": "https://forum.joeysretrohandhelds.com/"
         }
-      ]
+      ],
+      "access": "Public club announcements; Discord account needed to participate",
+      "discord_url": "https://discord.com/servers/1237837907679772672",
+      "discussion_url": "https://forum.joeysretrohandhelds.com/",
+      "integration": "public-announcement-snapshot"
     },
     {
       "id": "rh-gotx",
       "name": "Retro Handhelds GotX",
-      "home_url": "https://retrohandhelds.gg/games-of-the-month/",
-      "description": "Game of the Month selections across different release eras",
+      "home_url": "https://retrohandhelds.gg/community/",
+      "description": "Retro Handhelds Discord GotX: voted monthly games from different eras, dedicated discussion threads and completion challenges.",
       "picks": [
         {
           "title": "Castlevania",
@@ -52,14 +56,37 @@
           "month": "2026-10",
           "source_url": "https://retrohandhelds.gg/game-of-the-month-october-2026/"
         }
-      ]
+      ],
+      "access": "Public announcements; join Discord to participate",
+      "discussion_url": "https://retrohandhelds.gg/community/",
+      "integration": "public-announcement-snapshot"
+    },
+    {
+      "id": "techdweeb-dgs",
+      "name": "TechDweeb — Dusty Game Society",
+      "home_url": "https://techdweeb.straw.page/dustygamesociety",
+      "description": "Monthly shared retro game, members discuss it on Discord and may submit reviews featured in a video.",
+      "access": "Members-only game discussions (Patreon Dweeb tier)",
+      "integration": "directory-only; no permission for private content",
+      "picks": []
+    },
+    {
+      "id": "retrogaming-discord",
+      "name": "The Retrogaming Discord",
+      "home_url": "https://discord.me/retro",
+      "description": "Community-voted Game of the Month, play-alongs and game reviews. Club described in a third-party server listing; organizer not yet verified.",
+      "access": "Public server directory; current pick unverified",
+      "integration": "directory-only; organizer confirmation needed",
+      "picks": []
     },
     {
       "id": "inuksaiyan",
       "name": "InukSaiyan Retro Game Club",
       "home_url": "https://inuksaiyan.github.io/Retro-Game-Clubs/",
-      "description": "Our own club — no officially voted monthly pick announced yet",
-      "picks": []
+      "description": "Our own retro gaming club. Community voting, discussion and member reviews planned; no official monthly pick yet.",
+      "picks": [],
+      "access": "Future community",
+      "integration": "planned"
     }
   ]
 }
