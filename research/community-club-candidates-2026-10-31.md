@@ -27,3 +27,30 @@ This queue comes from the user's YouTube channel screenshots. Having a YouTube c
 3. Privately ask moderators about an opt-in feed/bot to publish game selections and review links. Do not scrape messages or bypass membership gates.
 4. Only then promote a candidate into the selectable Follow Clubs widget. Historic selections must say **archived**, never "now playing".
 5. Keep released Game Picker v0.3 and current user's v0.4.3 local HTML unchanged until consent to publish a new version.
+
+
+## Second creator screenshot batch (Oct 31, 2026)
+
+The user provided a second set of **ten YouTube channel screenshots**. Treat these as *creator discovery candidates*, not verified game clubs. Never invent a Discord group, Game of the Month, relationship, or current game merely from YouTube membership or "Join" buttons.
+
+| Creator | Game-club classification | Source / next research action |
+|---|---|---|
+| **CaseOh** (`@caseoh_`) | Streamer, no recurring retro game club established | https://www.youtube.com/@caseoh_ — look for explicit organized game picks, not generic game streams |
+| **bryanthaboi** (`@bryanthaboi`) | Programmer / Gen1Recomp creator-news *potential collaboration*, no game club established | https://www.youtube.com/@bryanthaboi — possible emulation or port releases, keep separate from clubs |
+| **Adin Walls** (`@adinwalls`) | Retro-handheld creator, no game club verified | https://www.youtube.com/@adinwalls |
+| **TechDweeb** (`@TechDweeb`) | **Already in widget** as Dusty Game Society; Patreon member-only game/review discussions, no permission for private content | https://techdweeb.straw.page/dustygamesociety — don't duplicate |
+| **reztez** (`@reztez.1`) | AYN Thor enthusiast/creator, game club unverified | Screenshot-supplied channel `@reztez.1`; possible Thor support community |
+| **Retro Dodo** (`@RetroDodo`) | Retro gaming media creator; monthly club unverified | https://retrododo.com — check community activities |
+| **Mr. Sujano** (`@MrSujano`) | Emulation news creator; no recurring game club verified | https://mrsujano.com — potential news/updates source rather than club |
+| **Mr Stephen's Retro Corner** (`@mrstephensretrocorner`) | Retro handheld reviews/game features; no recurring club verified | https://www.youtube.com/@mrstephensretrocorner |
+| **Joey's Retro Handhelds** (`@JoeysRetroHandhelds`) | **Already in widget**: Joeyverse Play Retro Games Club with verified weekly/monthly/seasonal/romhack community events | https://discord.com/servers/1237837907679772672 — don't duplicate |
+| **IsaacOS** (`@Isaac-OS`) | Creator covering handhelds and native/recompiled Pokémon projects; monthly club unverified | https://www.youtube.com/@Isaac-OS |
+
+### Add Retro Game Corps to creator discovery (user explicitly requested)
+
+- **Retro Game Corps** / Russ: **featured creator and discussion community**, *not* a confirmed independent monthly game club. Official 2021 announcement says a dedicated RGC space was made within the Retro Handhelds Discord: https://retrogamecorps.com/2021/08/28/join-the-retro-game-corps-discord-space/ .
+- His community-support page still names RGC discussion channels inside Retro Handhelds: https://retrogamecorps.com/support/ .
+- RGC has **no verified, separately organized recurring Game of the Month** from checked official sources. Therefore **show as creator**, link verified community channels, do not list a made-up current game or double-count Retro Handhelds GotX as an RGC club.
+- Better frontend taxonomy: **Verified Play-along Clubs** (can follow and pick their games), **Creators / News / Guides** (follow or bookmark, external links), **Club candidates under review** (not eligible for public active game randomizer). Explore source permission before syndication and respect club access tiers.
+
+**Research is still ongoing**: user indicated another screenshot would follow. Don't silently add these candidates as working club feeds or modify v0.4.3 local HTML.
