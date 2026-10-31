@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "verified_on": "2026-10-31",
+  "description": "Hand-verified public October 2026 club announcements. Snapshot only: not a live feed, club API, Discord integration or official partnership.",
+  "clubs": [
+    {
+      "id": "joeys-prgc",
+      "name": "Joey's Play Retro Games Club",
+      "home_url": "https://www.joeysretrohandhelds.com/play-retro-games-club/",
+      "description": "Play Retro Games Club — monthly, weekly and seasonal community games",
+      "picks": [
+        {
+          "title": "Super Mario Sunshine",
+          "system": "GameCube",
+          "event": "Game of the Month",
+          "month": "2026-10",
+          "source_url": "https://www.joeysretrohandhelds.com/play-retro-games-club/"
+        },
+        {
+          "title": "Super Ghouls 'n Ghosts",
+          "system": "SNES",
+          "event": "Halloween Special",
+          "month": "2026-10",
+          "source_url": "https://forum.joeysretrohandhelds.com/"
+        }
+      ]
+    },
+    {
+      "id": "rh-gotx",
+      "name": "Retro Handhelds GotX",
+      "home_url": "https://retrohandhelds.gg/games-of-the-month/",
+      "description": "Game of the Month selections across different release eras",
+      "picks": [
+        {
+          "title": "Castlevania",
+          "system": "NES",
+          "event": "Game of the Month · Pre-1996",
+          "month": "2026-10",
+          "source_url": "https://retrohandhelds.gg/game-of-the-month-october-2026/"
+        },
+        {
+          "title": "The Legend of Zelda: Majora's Mask",
+          "system": "Nintendo 64",
+          "event": "Game of the Month · 1996-2001",
+          "month": "2026-10",
+          "source_url": "https://retrohandhelds.gg/game-of-the-month-october-2026/"
+        },
+        {
+          "title": "Hotel Dusk: Room 215",
+          "system": "Nintendo DS",
+          "event": "Game of the Month · 2002+",
+          "month": "2026-10",
+          "source_url": "https://retrohandhelds.gg/game-of-the-month-october-2026/"
+        }
+      ]
+    },
+    {
+      "id": "inuksaiyan",
+      "name": "InukSaiyan Retro Game Club",
+      "home_url": "https://inuksaiyan.github.io/Retro-Game-Clubs/",
+      "description": "Our own club — no officially voted monthly pick announced yet",
+      "picks": []
+    }
+  ]
+}
