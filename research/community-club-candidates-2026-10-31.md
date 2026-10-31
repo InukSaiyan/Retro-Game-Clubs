@@ -54,3 +54,10 @@ The user provided a second set of **ten YouTube channel screenshots**. Treat the
 - Better frontend taxonomy: **Verified Play-along Clubs** (can follow and pick their games), **Creators / News / Guides** (follow or bookmark, external links), **Club candidates under review** (not eligible for public active game randomizer). Explore source permission before syndication and respect club access tiers.
 
 **Research is still ongoing**: user indicated another screenshot would follow. Don't silently add these candidates as working club feeds or modify v0.4.3 local HTML.
+
+
+### Third screenshot: Graves / @Graves_tech
+- **Graves** (`@Graves_tech`) — user-provided screenshot of YouTube creator reviewing retro and handheld gaming hardware, emulation updates, and optimization topics (e.g. Pokémon DS layouts, Cocoon 3.1, V38 Turnip, and Xbox 360 on Android).
+- **Classification:** Featured Creator / Tech & Emulation News candidate. **No verified ongoing Discord Game of the Month, voted play-along, or game-review club** from the sources checked on Oct 31, 2026. Do not treat his regular video uploads as club announcements.
+- Screenshot-supplied handle: https://www.youtube.com/@Graves_tech . A Patreon named Graves focuses on gaming handheld review videos, but no independent source was found proving a formal club on the channel: https://www.patreon.com/cw/gravestech . No need to link the creator with similarly named non-matching GRAVES accounts.
+- Future use: optional **Follow Featured Creator** or **News/Guides** tab if permission and verified links; do not put Graves into the **Game Club randomizer** until public evidence confirms a recurring club.
