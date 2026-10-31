@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1b27"><title>InukSaiyan Community Widget v0.4.7 Club Spotlight</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1b27;--panel:#172f3e;--edge:#456473;--ice:#9be3ea;--cream:#faf2dd;--muted:#b9cbd3}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--cream);font:15px/1.42 system-ui,sans-serif}
+body{background:radial-gradient(circle at right top,#255266 0%,transparent 40%),var(--bg)}
+main{max-width:1230px;margin:auto;padding:12px}header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.logo{font-weight:900;font-size:clamp(15px,3.2vw,22px);letter-spacing:.04em}.logo small{display:block;color:var(--ice);font-size:10px;letter-spacing:.12em}
+.flag{font-size:10px;border:1px solid #ba8860;color:#f1ad7c;border-radius:99px;padding:4px 7px;white-space:nowrap}
+.hero{padding:15px;background:linear-gradient(120deg,#285363,#172d3c);border:1px solid #578091;border-radius:15px;margin:12px 0}
+.hero h1{font-size:clamp(20px,4vw,29px);line-height:1.15;margin:4px 0}.hero p{margin:4px 0}
+.muted{color:var(--muted);font-size:12px}.eyebrow{color:var(--ice);font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;position:sticky;top:0;background:#0b1b27fa;padding:7px 0;z-index:2}
+button,a{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,textarea:focus-visible{outline:3px solid #f1ad7c;outline-offset:2px}
+.btn{color:var(--cream);background:#224554;border:1px solid #56818f;border-radius:9px;padding:8px 11px;font-weight:750;font-size:12px;text-decoration:none;display:inline-block}
+.btn.active,.primary{background:var(--ice);border-color:var(--ice);color:#092733}.tab{padding:11px 4px}.view{display:none}.view.active{display:block}
+.filters,.actions{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 12px}.headline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.card{border:1px solid var(--edge);background:var(--panel);border-radius:13px;padding:13px;margin:0 0 9px}.card h2{font-size:17px;line-height:1.2;margin:5px 0}
+.source{color:var(--ice);font-size:12px;font-weight:800}.desc{font-size:12px;color:var(--muted);margin:5px 0}.follow{width:20px;height:20px;accent-color:var(--ice)}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:center}.empty{border:1px dashed var(--edge);padding:18px;text-align:center;border-radius:12px;color:var(--muted);font-size:13px}
+.notes{display:none;margin-top:10px}.notes.open{display:block}textarea{width:100%;min-height:75px;resize:vertical;background:#0a2431;color:var(--cream);border:1px solid #74939f;padding:9px;border-radius:9px;font:inherit;font-size:13px}
+footer{margin:14px 0 2px;border-top:1px solid var(--edge);padding-top:12px;color:var(--muted);font-size:11px}a{color:var(--ice)}
+@media(max-width:400px){main{padding:8px}.card{padding:10px}.logo{font-size:15px}.btn{padding:7px 8px;font-size:11px}}
+
+/* Group club games in a readable 2-column grid; use 1 column inside a small iiSU widget. */
+.cards-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:stretch}
+.cards-grid>.card{margin:0;min-width:0}
+.club-section{margin:0 0 17px}
+.club-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 9px;color:var(--ice);font-weight:850;font-size:15px}
+.club-heading .count{font-weight:500;font-size:12px;color:var(--muted)}
+.cards-grid .actions{gap:6px;margin-bottom:0}
+.cards-grid .actions .btn{font-size:12px;padding:7px 9px}
+.cards-grid h2{overflow-wrap:anywhere}
+.club-section .card .source{display:none} /* The section header already credits the club. */
+.cards-grid>.empty{grid-column:1/-1}
+@media(max-width:650px){.cards-grid{grid-template-columns:minmax(0,1fr)}.club-heading{font-size:14px}}
+
+[hidden]{display:none!important}
+.link-overlay{position:fixed;inset:0;background:#000d;display:flex;align-items:center;justify-content:center;z-index:40;padding:14px}
+.link-dialog{background:#162f3f;border:2px solid var(--ice);border-radius:15px;max-width:640px;width:100%;padding:20px;box-shadow:0 20px 55px #000a}
+.link-dialog h2{margin:0 0 7px;font-size:19px}.link-dialog p{font-size:13px;color:var(--muted)}
+.link-dialog input{box-sizing:border-box;width:100%;font:13px/1.4 system-ui,sans-serif;background:#0b1b27;color:var(--cream);border:1px solid var(--edge);border-radius:9px;padding:12px;margin:9px 0}
+.link-dialog .actions{margin:5px 0 0}.btn{touch-action:manipulation}
+
+/* Artwork-led, viewport-adaptive 1/2/3 columns (WebView width, not device resolution). */
+.cards-grid{grid-template-columns:minmax(0,1fr)}
+@media(min-width:670px){.cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1100px){.cards-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.game-core{display:flex;gap:12px;align-items:flex-start;min-width:0;min-height:145px;margin-top:9px}
+.game-info{min-width:0;flex:1}
+.art{width:100px;min-width:100px;height:138px;border:1px solid #627d87;border-radius:10px;background:linear-gradient(155deg,#397287,#102934 82%);overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative}
+.art img{display:block;position:absolute;inset:0;opacity:0;width:100%;height:100%;object-fit:contain;background:#0c1c25;pointer-events:none}
+.art.loaded img{opacity:1}.art.loaded .art-fallback{display:none}
+.art-fallback{padding:8px 5px;text-align:center;font-weight:900;font-size:14px;color:#f6e9d0;line-height:1.2;overflow-wrap:anywhere}
+.art-fallback small{display:block;margin-top:9px;font-size:10px;font-weight:600;color:var(--ice)}
+.event-tag{display:inline-flex;margin:4px 0 6px;padding:4px 7px;font-size:10px;font-weight:850;letter-spacing:.04em;text-transform:uppercase;border-radius:7px;border:1px solid #8a9274;color:#f6ddab;background:#324c4e}
+.event-tag.week{border-color:#479999;color:#b4f5ed}.event-tag.month{border-color:#659ccc;color:#cde8fa}.event-tag.season{border-color:#b78e68;color:#ffe0b4}.event-tag.special{border-color:#bf839e;color:#ffdbec}
+.card h2{font-size:16px;line-height:1.25;overflow-wrap:anywhere;margin:2px 0 7px}
+.art-status{font-size:10px;color:var(--muted);padding:6px 0;margin:4px 0}
+@media(max-width:1100px) and (min-width:670px){.art{width:94px;min-width:94px;height:130px}}
+@media(max-width:420px){.art{width:86px;min-width:86px;height:118px}.game-core{min-height:119px}.game-info h2{font-size:16px}}
+.filters .btn{white-space:nowrap}
+.event-filters{margin-top:-2px}
+.cards-grid>.card{display:flex;flex-direction:column}
+.cards-grid>.card>.actions{margin-top:auto;padding-top:7px}
+.cards-grid>.card>.actions .btn{font-size:11px;padding:7px 8px}
+.section-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--ice);margin:4px 0 7px}
+.cover-attribution{font-size:11px;color:var(--muted);margin:8px 0 12px}
+/* The square iiSU Home tile uses a true compact view, not a shrunken full webpage. */
+.mini{display:none;border:1px solid #4d8290;background:linear-gradient(140deg,#1e4855,#122a37);border-radius:14px;padding:10px;height:100%;min-height:100%;overflow:hidden}
+.mini-head{font-size:14px;font-weight:900;color:var(--ice);margin:0 0 8px}
+.mini-row{display:flex;gap:10px;align-items:center;min-width:0}
+.mini .art{width:67px;min-width:67px;height:91px}
+.mini h2{font-size:16px;margin:3px 0;color:var(--cream);line-height:1.18}
+.mini .desc{margin:3px 0;font-size:11px}
+.mini .btn{font-size:11px;padding:7px 11px}
+.mini-actions{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:9px}
+@media(max-width:610px) and (max-height:670px){
+ body{height:100vh;overflow:hidden}main{height:100vh;max-width:none;padding:6px}
+ main>header,main>.hero,main>nav,main>.view,main>footer{display:none!important}
+ .mini{display:block}
+}
+@media(max-width:330px) and (max-height:670px){.mini .art{width:48px;min-width:48px;height:67px}.mini h2{font-size:14px}.mini-head{font-size:12px}}
+
+
+/* v0.4.7: dedicated per-club browsing controls, accessible with D-pad or touch. */
+.club-filter-title{margin:9px 0 5px}
+.club-filters{flex-wrap:wrap;gap:7px;margin-bottom:11px}
+.club-filters .btn{max-width:100%;white-space:normal;text-align:left}
+.club-filters .btn.active{box-shadow:inset 0 0 0 1px #c9fcff}
+.club-filters .btn:focus-visible{outline-offset:3px}
+@media(max-width:420px){.club-filters .btn{font-size:11px}}
+/* Controller navigation and explicit diagnostic state (expanded view only). */
+.controller-help{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:0 0 9px;padding:8px 10px;border:1px solid #527583;border-radius:10px;background:#142e3b}
+.controller-help .btn{font-size:12px;padding:7px 9px}
+.controller-help .muted{font-size:12px;flex:1;min-width:155px}
+:focus-visible{outline:3px solid #f3ba74!important;outline-offset:3px}
+.controller-highlight{outline:3px solid #f3ba74!important;outline-offset:3px;box-shadow:0 0 0 5px #18323a}
+@media(max-width:610px) and (max-height:670px){.controller-help{display:none!important}}
+</style></head><body><main>
+<section class="mini" aria-label="Compact featured club game"><div class="mini-head">🏔️ INUKSAIYAN · CLUB PICKS</div>
+<div class="mini-row"><div id="mini-art"></div><div style="min-width:0"><div class="eyebrow" id="mini-type">GAME OF MONTH</div><h2 id="mini-title">Super Mario Sunshine</h2><p class="desc" id="mini-club">Joey's Retro Game Club</p><p class="desc" id="mini-system">GameCube</p></div></div>
+<div class="mini-actions"><button class="btn primary" type="button" id="mini-next">🎲 Next pick</button><span class="muted">Open widget for details</span></div></section>
+<header><div class="logo">🏔️ INUKSAIYAN<small>RETRO GAME CLUB · COMMUNITY</small></div><span class="flag">WIDGET v0.4.7 CLUB SPOTLIGHT</span></header>
+<div class="hero"><div class="eyebrow">What are the clubs playing?</div><h1>One widget. Many game clubs.</h1>
+<p class="muted">Follow clubs, discover game picks, track play-alongs and open their discussions.</p><p class="muted">October 2026 public snapshot · archival after October · no live Discord connection</p></div>
+<nav class="tabs" aria-label="Widget navigation"><button type="button" class="btn tab active" data-tab="picks">🎲 Picks</button><button type="button" class="btn tab" data-tab="clubs">🌐 Clubs</button><button type="button" class="btn tab" data-tab="plays">🎮 My Plays</button></nav>
+<div class="controller-help" aria-label="Controller input test"><button type="button" id="controller-focus" class="btn">🎮 Focus widget controls</button><span id="controller-feedback" role="status" class="muted">Controller not detected yet · Try D-pad or A. Touch still works.</span></div>
+<section id="view-picks" class="view active"><div class="filters"><button type="button" class="btn active" data-filter="all">Public picks</button><button type="button" class="btn" data-filter="followed">My clubs</button></div>
+<div class="section-label club-filter-title">EXPLORE CLUB PICKS</div>
+<div class="filters club-filters" id="club-filters" role="group" aria-label="Choose which club's games to show"></div>
+<div class="filters event-filters" role="group" aria-label="Event types">
+<button class="btn active" type="button" data-kind="all">All types</button>
+<button class="btn" type="button" data-kind="week">Weekly</button>
+<button class="btn" type="button" data-kind="month">Monthly</button>
+<button class="btn" type="button" data-kind="season">Seasonal</button>
+<button class="btn" type="button" data-kind="special">Specials</button></div>
+<div class="headline"><span class="muted" id="pick-count"></span><button type="button" class="btn primary" id="random">🎲 Surprise me</button></div><div id="suggestion" aria-live="polite"></div><div id="picks"></div>
+<p class="cover-attribution">Optional artwork courtesy of <a href="https://github.com/libretro-thumbnails/libretro-thumbnails">Libretro Thumbnails</a> (original artwork belongs to game publishers). Covers need internet; offline fallback cards remain usable. External links open via our safe-link panel.</p></section>
+<section id="view-clubs" class="view"><h2>🌐 Follow communities</h2><p class="muted">Choose communities to follow. Your choices stay in this widget on this device; private discussions require joining the club.</p><div id="clubs" class="cards-grid"></div><p class="muted">Independent club directory; no official partnerships or private Discord access.</p></section>
+<section id="view-plays" class="view"><h2>🎮 My play-alongs</h2><p class="muted" id="progress-count"></p><div id="plays" class="cards-grid"></div><p class="muted">Progress and review notes are saved only in the widget's local storage. They are not posted to Discord.</p></section>
+<footer>Made by InukSaiyan · Vibe-coded with ChatGPT 😅 · Standalone experimental HTML for iiSU Web Widget; no ROMs, live Discord synchronization or emulator launching. <button type="button" class="btn" id="game-picker-url">Game Picker v0.3 🔗</button></footer>
+
+<div id="link-overlay" class="link-overlay" hidden>
+ <div class="link-dialog" role="dialog" aria-modal="true" aria-labelledby="link-title">
+  <h2 id="link-title">🔗 Open link safely</h2>
+  <p>iiSU sometimes opens websites inside the widget, replacing your Game Picker. Copy this address and paste it into your normal browser instead. <strong>Press B to return to this widget</strong> (or use the Back button below).</p>
+  <input id="link-address" type="text" readonly aria-label="External website address" value="">
+  <div class="actions">
+   <button type="button" class="btn primary" id="copy-address">📋 Copy address</button>
+   <button type="button" class="btn" id="select-address">Select address</button>
+   <button type="button" class="btn" id="close-link">ⓑ Back to widget</button>
+  </div>
+  <p id="link-message" role="status" aria-live="polite"></p>
+ </div>
+</div>
+</main><script>
+"use strict";
+const feed=[{"id":"joeys-prgc","name":"Joey's Play Retro Games Club","description":"Monthly, weekly, romhack and seasonal games with community discussions.","access":"Public announcements; Discord participation may require joining","url":"https://www.joeysretrohandhelds.com/play-retro-games-club/","discussion":"https://forum.joeysretrohandhelds.com/","picks":[["Super Mario Sunshine","GameCube","Game of the Month","2026-10"],["Super Ghouls 'n Ghosts","SNES","Halloween Special","2026-10"],["Galaga","NES","Game of the Week · Oct 25–31","2026-10"],["Kirby's Halloween Adventure","NES romhack","Romhack of the Month","2026-10"],["Paper Mario","Nintendo 64","Game of the Season · Q4","2026-10"]]},{"id":"rh-gotx","name":"Retro Handhelds GotX","description":"Community-voted games across several eras, with Discord play-alongs and discussion.","access":"Public announcements; join Discord for discussions","url":"https://retrohandhelds.gg/community/","discussion":"https://retrohandhelds.gg/community/","picks":[["Castlevania","NES","Game of the Month · Pre-1996","2026-10"],["The Legend of Zelda: Majora's Mask","Nintendo 64","Game of the Month · 1996–2001","2026-10"],["Hotel Dusk: Room 215","Nintendo DS","Game of the Month · 2002+","2026-10"],["Xenogears","PlayStation 1","Game of the Quarter · Q4","2026-10"]]},{"id":"techdweeb-dgs","name":"TechDweeb — Dusty Game Society","description":"Monthly retro games and member reviews. No private club selections reproduced.","access":"Patreon members-only discussions","url":"https://techdweeb.straw.page/dustygamesociety","discussion":null,"picks":[]},{"id":"retrogaming-discord","name":"The Retrogaming Discord","description":"Community-voted monthly games; organizer and current pick not verified.","access":"Public listing; current events not verified","url":"https://discord.me/retro","discussion":null,"picks":[]},{"id":"inuksaiyan","name":"InukSaiyan Retro Game Club","description":"Our own community. No official monthly pick announced yet.","access":"Coming soon","url":"https://inuksaiyan.github.io/Retro-Game-Clubs/","discussion":null,"picks":[]}];
+
+// Curated, directly linked box-art thumbnails. Games, ROMs, cover scans are not bundled.
+// If offline or missing, always display the original, readable title placeholder.
+const ART_BASE="https://raw.githubusercontent.com/libretro-thumbnails/";
+const ART_FILES={
+ "Super Mario Sunshine":["Nintendo_-_GameCube","Super Mario Sunshine (USA).png"],
+ "Galaga":["Nintendo_-_Nintendo_Entertainment_System","Galaga - Demons of Death (USA).png"],
+ "Paper Mario":["Nintendo_-_Nintendo_64","Paper Mario (USA).png"],
+ "Castlevania":["Nintendo_-_Nintendo_Entertainment_System","Castlevania (USA).png"],
+ "The Legend of Zelda: Majora's Mask":["Nintendo_-_Nintendo_64","Legend of Zelda, The - Majora's Mask (USA).png"],
+ "Xenogears":["Sony_-_PlayStation","Xenogears (USA).png"]
+};
+function cover(p){
+ const root=make("div","art"),holder=make("div","art-fallback",p.game[0]);
+ holder.appendChild(make("small","",p.game[1]));root.appendChild(holder);
+ const parts=ART_FILES[p.game[0]];
+ if(parts){const image=make("img");image.loading=window.matchMedia("(max-width: 610px) and (max-height: 670px)").matches?"eager":"lazy";image.decoding="async";image.alt="Box art for "+p.game[0];
+ image.addEventListener("load",()=>root.classList.add("loaded"));
+ image.addEventListener("error",()=>{image.remove();root.classList.remove("loaded")});
+ image.src=ART_BASE+parts[0]+"/master/Named_Boxarts/"+encodeURIComponent(parts[1]);
+ root.appendChild(image);}
+ return root;
+}
+function eventKind(value){const t=value.toLowerCase();if(t.includes("week"))return "week";
+ if(t.includes("season")||t.includes("quarter"))return "season";
+ if(t.includes("special")||t.includes("romhack"))return "special";
+ if(t.includes("month"))return "month";return "special";}
+function eventLabel(value){const kind=eventKind(value);return kind==="week"?"Game of the Week":kind==="season"?"Game of the Season / Quarter":kind==="special"?"Special / Romhack":"Game of the Month";}
+let kind="all";
+
+const keyPrefix="inuksaiyan-community-widget-v04-";
+function load(k,backup){try{const r=JSON.parse(localStorage.getItem(keyPrefix+k));return r===null?backup:r}catch(e){return backup}}
+function save(k,v){try{localStorage.setItem(keyPrefix+k,JSON.stringify(v))}catch(e){}}
+let followed=load("followed",[]),statuses=load("statuses",{}),reviews=load("reviews",{});
+if(!Array.isArray(followed))followed=[];if(!statuses||typeof statuses!=="object"||Array.isArray(statuses))statuses={};if(!reviews||typeof reviews!=="object"||Array.isArray(reviews))reviews={};
+let filter="all",suggested=null,selectedClub="all";
+const $=id=>document.getElementById(id);
+function make(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
+// iiSU's Web Widget may ignore target=_blank and replace the embedded HTML with the website.
+// External destinations are shown in a copyable panel instead of navigating inside this WebView.
+// B/Back should dismiss the link panel without ever leaving our widget.
+// When the host implements Back as WebView.goBack(), a same-document history
+// entry gives it something to return from. If iiSU consumes Back at the
+// native layer before JavaScript sees it, only iiSU can override that.
+let lastLinkTrigger=null;
+let linkHistoryAdded=false;
+let bWatchHandle=null;
+let bWasDown=false;
+const linkPanel=()=>$("link-overlay");
+function isControllerBPressed(){
+ try{
+  if(typeof navigator.getGamepads!=="function")return false;
+  const pads=navigator.getGamepads()||[];
+  // Standard Gamepad mapping: button 1 is East/B. Some Android mappings differ.
+  return Array.from(pads).some(p=>p&&p.mapping==="standard"&&p.buttons&&p.buttons[1]&&p.buttons[1].pressed);
+ }catch(e){return false}
+}
+function stopBWatcher(){
+ if(bWatchHandle!==null){clearInterval(bWatchHandle);bWatchHandle=null}
+}
+function beginBWatcher(){
+ stopBWatcher();
+ bWasDown=isControllerBPressed();
+ // Poll only while the overlay is visible. No Home widget background loop.
+ if(typeof navigator.getGamepads==="function"){
+  bWatchHandle=setInterval(()=>{
+   if(linkPanel().hidden){stopBWatcher();return}
+   const now=isControllerBPressed();
+   if(now&&!bWasDown)closeSafeLink();
+   bWasDown=now;
+  },90);
+ }
+}
+function hideSafeLink(){
+ if(linkPanel().hidden)return;
+ linkPanel().hidden=true;
+ stopBWatcher();
+ if(lastLinkTrigger&&typeof lastLinkTrigger.focus==="function")lastLinkTrigger.focus();
+}
+function showSafeLink(url){
+ try{const checked=new URL(url);if(checked.protocol!=="https:")return}catch(e){return}
+ const wasHidden=linkPanel().hidden;
+ if(wasHidden)lastLinkTrigger=document.activeElement;
+ $("link-address").value=url;$("link-message").textContent="";
+ linkPanel().hidden=false;
+ if(wasHidden){
+  linkHistoryAdded=false;
+  try{
+   // A fragment-only entry is permitted for normal http(s) and most file URLs.
+   history.pushState({inukWidgetLink:true},"","#inuk-link");
+   linkHistoryAdded=true;
+  }catch(e){/* file:// WebViews can disallow history manipulation. */}
+  beginBWatcher();
+ }
+ $("copy-address").focus();
+}
+function closeSafeLink(){
+ if(linkPanel().hidden)return;
+ const stepBack=linkHistoryAdded&&history.state&&history.state.inukWidgetLink===true;
+ linkHistoryAdded=false;
+ hideSafeLink();
+ if(stepBack){try{history.back()}catch(e){}}
+}
+// B handled as Back by the native WebView may pop history instead of reaching
+// keydown; popstate then dismisses our link panel too.
+window.addEventListener("popstate",()=>{
+ if(!linkPanel().hidden){linkHistoryAdded=false;hideSafeLink()}
+});
+function link(text,url){try{
+ const target=new URL(url);if(target.protocol!=="https:")return null;
+ const b=make("button","btn",text.replace(/\s*↗$/,"")+" 🔗");b.type="button";
+ b.addEventListener("click",()=>showSafeLink(target.href));return b;
+}catch(e){return null}}
+$("game-picker-url").addEventListener("click",()=>showSafeLink("https://inuksaiyan.github.io/Retro-Game-Clubs/"));
+$("close-link").addEventListener("click",closeSafeLink);
+$("select-address").addEventListener("click",()=>{$("link-address").focus();$("link-address").select();$("link-message").textContent="Address selected. Use Copy or long-press to copy it."});
+$("copy-address").addEventListener("click",async()=>{
+ const address=$("link-address");
+ let copied=false;
+ try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(address.value);copied=true}}catch(e){}
+ if(!copied){
+  address.focus();address.select();
+  try{copied=document.execCommand("copy")}catch(e){}
+ }
+ $("link-message").textContent=copied?"Copied! Paste into Chrome or your usual browser.":"Copy blocked by iiSU. Long-press the address above, then Copy; paste into your browser.";
+});
+$("link-overlay").addEventListener("click",event=>{if(event.target===$("link-overlay"))closeSafeLink()});
+// Android controller B may be reported as Escape, Backspace, browser Back,
+// a gamepad-specific key, or via navigator.getGamepads(). Only intercept
+// when the safe-link overlay is open; otherwise let iiSU handle Back.
+document.addEventListener("keydown",event=>{
+ if(linkPanel().hidden)return;
+ const keys=["Escape","Backspace","BrowserBack","GoBack","Back","GamepadB"];
+ const codes=["Escape","BrowserBack","GamepadB"];
+ if(keys.includes(event.key)||codes.includes(event.code)||event.keyCode===4){
+  event.preventDefault();event.stopPropagation();closeSafeLink();
+ }
+},true);
+// Defense against any accidental future links replacing the widget.
+document.addEventListener("click",event=>{
+ const a=event.target.closest&&event.target.closest("a[href]");
+ if(a){event.preventDefault();event.stopPropagation();showSafeLink(a.href)}
+},true);
+function allPicks(){return feed.flatMap(c=>c.picks.map((game,i)=>({club:c,game:game,id:c.id+"|"+game[3]+"|"+game[0]+"|"+i})))}
+function filtered(){return allPicks().filter(p=>(filter!=="followed"||followed.includes(p.club.id))&&(selectedClub==="all"||p.club.id===selectedClub)&&(kind==="all"||eventKind(p.game[2])===kind))}
+function archive(month){const n=new Date();return month!==n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")}
+function gameCard(p){
+ const c=make("article","card");c.appendChild(make("div","source",p.club.name));
+ const core=make("div","game-core");core.appendChild(cover(p));
+ const info=make("div","game-info");
+ info.appendChild(make("span","event-tag "+eventKind(p.game[2]),eventLabel(p.game[2])));
+ info.appendChild(make("h2","",p.game[0]));
+ info.appendChild(make("p","desc",p.game[1]+" · "+p.game[2]));
+ info.appendChild(make("p","desc",p.game[3]+(archive(p.game[3])?" · archive":"")));
+ core.appendChild(info);c.appendChild(core);
+const actions=make("div","actions"),playing=make("button","btn"+(statuses[p.id]==="playing"?" active":""),statuses[p.id]==="playing"?"✓ Playing":"▶ I'm playing"),done=make("button","btn"+(statuses[p.id]==="finished"?" active":""),statuses[p.id]==="finished"?"✓ Finished":"✓ Finished it");
+playing.type=done.type="button";
+function updateStateButtons(){
+ const state=statuses[p.id];
+ playing.textContent=state==="playing"?"✓ Playing":"▶ I'm playing";
+ done.textContent=state==="finished"?"✓ Finished":"✓ Finished it";
+ playing.classList.toggle("active",state==="playing");
+ done.classList.toggle("active",state==="finished");
+ const all=allPicks();$("progress-count").textContent=all.filter(x=>statuses[x.id]==="playing").length+" playing · "+all.filter(x=>statuses[x.id]==="finished").length+" finished";
+}
+playing.addEventListener("click",()=>{statuses[p.id]=statuses[p.id]==="playing"?"":"playing";save("statuses",statuses);updateStateButtons()});
+done.addEventListener("click",()=>{statuses[p.id]=statuses[p.id]==="finished"?"":"finished";save("statuses",statuses);updateStateButtons()});
+actions.append(playing,done);
+const discussion=link("💬 Discuss / review ↗",p.club.discussion||p.club.url);if(discussion)actions.appendChild(discussion);
+const note=make("button","btn","✎ My notes");note.type="button";actions.appendChild(note);c.appendChild(actions);
+const area=make("div","notes"),input=make("textarea");input.placeholder="Private thoughts about this game…";input.maxLength=700;input.value=typeof reviews[p.id]==="string"?reviews[p.id]:"";const store=make("button","btn","Save note"),feedback=make("span","muted","");store.type="button";
+store.addEventListener("click",()=>{reviews[p.id]=input.value;save("reviews",reviews);feedback.textContent=" Saved locally ✓"});area.append(input,store,feedback);note.addEventListener("click",()=>area.classList.toggle("open"));c.appendChild(area);return c}
+function renderClubFilters(){
+ const wrap=$("club-filters");wrap.replaceChildren();
+ const clubs=feed.filter(c=>c.picks.length);
+ const choices=[{id:"all",name:"🌐 All clubs",count:allPicks().length},...clubs.map(c=>({id:c.id,name:c.name,count:c.picks.length}))];
+ for(const choice of choices){
+  const button=make("button","btn"+(selectedClub===choice.id?" active":""),choice.name+" ("+choice.count+")");
+  button.type="button";button.setAttribute("aria-pressed",String(selectedClub===choice.id));
+  button.addEventListener("click",()=>{
+   selectedClub=choice.id;suggested=null;
+   for(const other of wrap.querySelectorAll("button")){
+    const enabled=other===button;other.classList.toggle("active",enabled);other.setAttribute("aria-pressed",String(enabled));
+   }
+   renderPicks();
+  });
+  wrap.appendChild(button);
+ }
+}
+function renderPicks(){const wrap=$("picks");wrap.replaceChildren();const pool=filtered();$("pick-count").textContent=pool.length+" verified event picks";
+if(!pool.length)wrap.appendChild(make("div","empty",filter==="followed"?"No matching picks from your followed clubs. Open Clubs to follow a community, or switch to Public picks.":"No verified picks for these filters. Choose All types or another club."));
+else {
+  // Keep each community's picks together, with 1–3 adaptive cards per row.
+  // The CSS automatically switches to one column in smaller iiSU widget sizes.
+  const clubIds=[...new Set(pool.map(p=>p.club.id))];
+  for(const clubId of clubIds){
+    const picks=pool.filter(p=>p.club.id===clubId);
+    const section=make("section","club-section");
+    const heading=make("div","club-heading");
+    heading.appendChild(make("span","",picks[0].club.name));
+    heading.appendChild(make("span","count",picks.length+" "+(picks.length===1?"pick":"picks")));
+    section.appendChild(heading);
+    const grid=make("div","cards-grid");
+    for(const p of picks)grid.appendChild(gameCard(p));
+    section.appendChild(grid);
+    wrap.appendChild(section);
+  }
+}
+const out=$("suggestion");out.replaceChildren();if(suggested){const card=make("div","card");card.appendChild(make("div","source","YOUR RANDOM CLUB PICK"));const core=make("div","game-core");core.appendChild(cover(suggested));const info=make("div","game-info");info.appendChild(make("span","event-tag "+eventKind(suggested.game[2]),eventLabel(suggested.game[2])));info.appendChild(make("h2","",suggested.game[0]));info.appendChild(make("p","desc",suggested.club.name+" · "+suggested.game[1]));core.appendChild(info);card.appendChild(core);out.appendChild(card)}}
+function renderClubs(){const wrap=$("clubs");wrap.replaceChildren();for(const club of feed){const c=make("div","card"),row=make("div","row"),left=make("div");left.appendChild(make("h2","",club.name));left.appendChild(make("p","desc",club.access));const input=make("input","follow");input.type="checkbox";input.checked=followed.includes(club.id);input.setAttribute("aria-label","Follow "+club.name);input.addEventListener("change",()=>{followed=input.checked?[...new Set([...followed,club.id])]:followed.filter(x=>x!==club.id);save("followed",followed);suggested=null;miniIndex=0;renderPicks();renderMini()});row.append(left,input);c.appendChild(row);c.appendChild(make("p","desc",club.description));c.appendChild(make("p","desc",club.picks.length+" publicly verified October 2026 picks"));if(club.picks.length){
+ const browse=make("button","btn","🎲 Browse "+club.picks.length+" picks");browse.type="button";
+ browse.addEventListener("click",()=>{
+  selectedClub=club.id;filter="all";kind="all";suggested=null;
+  document.querySelectorAll("[data-filter]").forEach(b=>b.classList.toggle("active",b.dataset.filter==="all"));
+  document.querySelectorAll("[data-kind]").forEach(b=>b.classList.toggle("active",b.dataset.kind==="all"));
+  renderClubFilters();renderPicks();
+  document.querySelectorAll(".view").forEach(view=>view.classList.toggle("active",view.id==="view-picks"));
+  document.querySelectorAll("[data-tab]").forEach(button=>button.classList.toggle("active",button.dataset.tab==="picks"));
+  const focused=$('club-filters').querySelector('button.active');
+  if(focused)focused.focus({preventScroll:true});
+  window.scrollTo(0,0);
+ });c.appendChild(browse);
+ }
+ const visit=link("Visit club ↗",club.url);if(visit)c.appendChild(visit);if(club.discussion){const a=link(" Discussions ↗",club.discussion);if(a)c.appendChild(a)}wrap.appendChild(c)}}
+function renderProgress(){const wrap=$("plays");wrap.replaceChildren();const playing=allPicks().filter(p=>statuses[p.id]==="playing"),finished=allPicks().filter(p=>statuses[p.id]==="finished");$("progress-count").textContent=playing.length+" playing · "+finished.length+" finished";const all=playing.concat(finished);if(!all.length)wrap.appendChild(make("div","empty","Select a game under Picks and mark Playing or Finished."));else all.forEach(p=>wrap.appendChild(gameCard(p)))}
+function render(){renderClubFilters();renderPicks();renderClubs();renderProgress()}
+for(const b of document.querySelectorAll("[data-tab]"))b.addEventListener("click",()=>{render();document.querySelectorAll(".view").forEach(s=>s.classList.toggle("active",s.id==="view-"+b.dataset.tab));document.querySelectorAll("[data-tab]").forEach(n=>n.classList.toggle("active",n===b))});
+for(const b of document.querySelectorAll("[data-kind]"))b.addEventListener("click",()=>{kind=b.dataset.kind;suggested=null;document.querySelectorAll("[data-kind]").forEach(n=>n.classList.toggle("active",n===b));renderPicks()});
+for(const b of document.querySelectorAll("[data-filter]"))b.addEventListener("click",()=>{filter=b.dataset.filter;suggested=null;document.querySelectorAll("[data-filter]").forEach(n=>n.classList.toggle("active",n===b));renderPicks()});
+$("random").addEventListener("click",()=>{const pool=filtered();if(!pool.length){$("view-picks").classList.remove("active");$("view-clubs").classList.add("active");document.querySelectorAll("[data-tab]").forEach(n=>n.classList.toggle("active",n.dataset.tab==="clubs"));return}suggested=pool[Math.floor(Math.random()*pool.length)];renderPicks()});
+
+let miniIndex=0;
+function miniPool(){const xs=allPicks();const first=xs.filter(p=>followed.includes(p.club.id));const source=first.length?first:xs;
+ return source.filter(p=>eventKind(p.game[2])==="month").concat(source.filter(p=>eventKind(p.game[2])!=="month"));}
+function renderMini(){const pool=miniPool();if(!pool.length)return;
+ miniIndex=miniIndex%pool.length;const p=pool[miniIndex];
+ $("mini-title").textContent=p.game[0];$("mini-type").textContent=eventLabel(p.game[2])+" · "+p.game[3]+(archive(p.game[3])?" · ARCHIVED":"");
+ $("mini-club").textContent=p.club.name;$("mini-system").textContent=p.game[1];
+ $("mini-art").replaceChildren(cover(p));}
+$("mini-next").addEventListener("click",()=>{miniIndex++;renderMini()});
+renderMini();
+
+render();
+// V0.4.6: controller-first focus path. iiSU may consume gamepad events before
+// embedded HTML gets them; diagnostics truthfully show what reaches this page.
+const controllerFeedback=$("controller-feedback");
+const controllerButton=$("controller-focus");
+const navKeys={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right"};
+let currentCtrlFocus=null;
+let padLastMove=0,padAWasDown=false,padDirLast="",padLastB=false,padConnected=false;
+const cardActionsSelector='button:not([disabled]),a[href],input[type="checkbox"]:not([disabled]),textarea:not([disabled])';
+function isCompactMode(){return getComputedStyle(document.querySelector('.mini')).display!=="none"}
+function activeTargets(){
+ const base=isCompactMode()?document.querySelector('.mini'):document.querySelector('main');
+ if(!base)return [];
+ return [...base.querySelectorAll(cardActionsSelector)].filter(node=>{
+  if(node.closest('[hidden]'))return false;
+  const rect=node.getBoundingClientRect();
+  if(rect.width<4||rect.height<4)return false;
+  const style=getComputedStyle(node);
+  return style.visibility!=="hidden"&&style.display!=="none";
+ });
+}
+function recordInput(text){if(controllerFeedback)controllerFeedback.textContent=text}
+function focusControl(node,method){
+ if(!node)return;
+ document.querySelectorAll('.controller-highlight').forEach(el=>el.classList.remove('controller-highlight'));
+ node.classList.add('controller-highlight');
+ currentCtrlFocus=node;
+ node.focus({preventScroll:true});
+ if(node.scrollIntoView)node.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});
+ if(method)recordInput(method+' · '+((node.getAttribute('aria-label')||node.textContent||node.placeholder||'Control').trim().slice(0,45)));
+}
+function moveControl(direction,method){
+ const allowed=activeTargets();if(!allowed.length)return;
+ const original=allowed.includes(document.activeElement)?document.activeElement:(allowed.includes(currentCtrlFocus)?currentCtrlFocus:null);
+ if(!original){focusControl(allowed[0],method);return}
+ const a=original.getBoundingClientRect(),ax=a.left+a.width/2,ay=a.top+a.height/2;
+ let candidate=null,best=Infinity;
+ for(const node of allowed){if(node===original)continue;
+  const b=node.getBoundingClientRect(),dx=b.left+b.width/2-ax,dy=b.top+b.height/2-ay;
+  const primary=direction==='right'?dx:direction==='left'?-dx:direction==='down'?dy:-dy;
+  const secondary=(direction==='left'||direction==='right')?Math.abs(dy):Math.abs(dx);
+  if(primary<=3)continue;
+  // Strong preference for close same-row/same-column elements.
+  const score=primary+secondary*2.7;
+  if(score<best){best=score;candidate=node}
+ }
+ // Edge of grid: keep focus rather than jumping to an unpredictable card.
+ if(candidate)focusControl(candidate,method);
+ else recordInput(method+' · Edge of controls');
+}
+function activateCurrent(method){
+ const allowed=activeTargets();
+ const target=allowed.includes(document.activeElement)?document.activeElement:(allowed.includes(currentCtrlFocus)?currentCtrlFocus:null);
+ if(!target){focusControl(allowed[0],method);return}
+ if(target.matches('textarea')){target.focus();recordInput(method+' · Writing note');return}
+ if(target.matches('button,input[type=checkbox]')){
+  recordInput(method+' · Select: '+((target.getAttribute('aria-label')||target.textContent||'Checkbox').trim().slice(0,40)));
+  target.click();
+ }
+}
+// Touching Focus establishes focus inside WebView if iiSU otherwise retains it.
+controllerButton.addEventListener('click',()=>{
+ recordInput('Focus requested · Try D-pad now');
+ const target=document.querySelector('[data-tab="picks"]');
+ if(target)focusControl(target,'Widget focus ready');
+});
+document.addEventListener('keydown',event=>{
+ if(!linkPanel().hidden)return; // Existing safe-link B handling has priority.
+ const key=event.key;
+ if(navKeys[key]){
+  const tag=document.activeElement?.tagName;
+  if(tag==='TEXTAREA'||tag==='INPUT'&&document.activeElement?.type==='text')return;
+  event.preventDefault();event.stopPropagation();
+  moveControl(navKeys[key],'D-pad key '+key.replace('Arrow',''));return;
+ }
+ // A usually maps to Enter/Space and HTML's native button activation works.
+ if(key==='Enter'||key===' '){
+  recordInput('A / Select key received');
+  // Don't synthesize another click (avoids double activation).
+ }
+},true);
+window.addEventListener('gamepadconnected',()=>{padConnected=true;recordInput('Gamepad reported by Android · Press D-pad')});
+window.addEventListener('gamepaddisconnected',()=>{padConnected=false;recordInput('Gamepad disconnected')});
+function getPadInput(){
+ try{
+  if(typeof navigator.getGamepads!=='function')return null;
+  const pads=navigator.getGamepads();if(!pads)return null;
+  const pad=Array.from(pads).find(p=>p&&p.connected!==false&&p.buttons);
+  if(!pad)return null;
+  const pressed=i=>!!(pad.buttons[i]&&pad.buttons[i].pressed);
+  const axis=pad.axes||[];
+  const left=pressed(14)||(axis[0]||0)<-0.75;
+  const right=pressed(15)||(axis[0]||0)>0.75;
+  const up=pressed(12)||(axis[1]||0)<-0.75;
+  const down=pressed(13)||(axis[1]||0)>0.75;
+  return {dir:up?'up':down?'down':left?'left':right?'right':'',a:pressed(0),b:pressed(1),id:pad.id||'gamepad'};
+ }catch(err){return null}
+}
+// Low-cost polling for WebViews which expose Gamepad API but not keydown.
+// No heavyweight animation loop, and no polling when the WebView is hidden.
+setInterval(()=>{
+ if(document.visibilityState==='hidden')return;
+ const pad=getPadInput();if(!pad)return;
+ if(!padConnected){padConnected=true;recordInput('Gamepad API detected · '+pad.id.slice(0,30))}
+ if(!linkPanel().hidden){padAWasDown=pad.a;padDirLast=pad.dir;return}
+ const now=Date.now();
+ if(pad.dir&&(pad.dir!==padDirLast||now-padLastMove>240)){
+  moveControl(pad.dir,'Gamepad D-pad');padLastMove=now;
+ }
+ padDirLast=pad.dir;
+ if(pad.a&&!padAWasDown){activateCurrent('Gamepad A')}
+ padAWasDown=pad.a;
+},110);
+</script></body></html>
